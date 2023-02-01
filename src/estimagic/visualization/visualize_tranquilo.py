@@ -66,7 +66,8 @@ def visualize_tranquilo(results, iterations):
     nrows = 8
     ncols = len(cases)
     specs = np.array([[{}] * ncols] * nrows)
-    if len(list(results.values())[0].params) == 3:
+    n_params = len(list(results.values())[0].params)
+    if n_params == 3:
         specs[0, :] = {"type": "surface"}
     fig = make_subplots(
         rows=nrows,
@@ -118,7 +119,22 @@ def visualize_tranquilo(results, iterations):
         showgrid=False, showline=True, linewidth=1, linecolor="black", zeroline=False
     )
     fig.update_layout(hovermode="x unified")
-
+    if n_params == 3:
+        for col in range(ncols):
+            for axis in ["xaxis", "yaxis", "zaxis"]:
+                fig.update_layout(
+                    {
+                        f"scene{(col+1)}": {
+                            axis: {
+                                "showline": True,
+                                "showgrid": False,
+                                "linewidth": 1,
+                                "linecolor": "black",
+                                "title_text": "",
+                            }
+                        }
+                    }
+                )
     return fig
 
 
@@ -673,4 +689,5 @@ def _plot_sample_points_3d(sample_points, center, radius, fig, col, row, color_d
         row=row,
         hoverinfo="skip",
     )
+
     return fig
