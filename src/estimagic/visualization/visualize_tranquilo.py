@@ -65,6 +65,9 @@ def visualize_tranquilo(results, iterations):
     cases = results.keys()
     nrows = 8
     ncols = len(cases)
+    specs = np.array([[{}] * ncols] * nrows)
+    if len(list(results.values())[0].params) == 3:
+        specs[0, :] = {"type": "surface"}
     fig = make_subplots(
         rows=nrows,
         cols=ncols,
@@ -72,6 +75,7 @@ def visualize_tranquilo(results, iterations):
         horizontal_spacing=1 / (ncols * 6),
         vertical_spacing=(1 / (nrows - 1)) / 4,
         shared_yaxes=True,
+        specs=specs.tolist(),
     )
     color_dict = {
         "existing": "rgb(0,0,255)",
@@ -201,45 +205,31 @@ def _plot_criterion(history, state, color_dict, fig, row, col):
 
 def _plot_sample_points(history, state, color_dict, fig, row, col):
     sample_points = _get_sample_points(state, history)
-    if state.x.shape[0] <= 2:
+    if state.x.shape[0] <= 3:
         trustregion = state.trustregion
         radius = trustregion.radius
         center = trustregion.center
-        fig.add_shape(
-            type="circle",
-            xref="x",
-            yref="y",
-            x0=center[0] - radius,
-            y0=center[1] - radius,
-            x1=center[0] + radius,
-            y1=center[1] + radius,
-            line_width=0.5,
-            col=col,
-            row=row,
-            line_color="grey",
-        )
+        if state.x.shape[0] == 2:
+            fig = _plot_sample_points_2d(
+                fig=fig,
+                sample_points=sample_points,
+                center=center,
+                radius=radius,
+                color_dict=color_dict,
+                col=col,
+                row=row,
+            )
+        elif state.x.shape[0] == 3:
+            fig = _plot_sample_points_3d(
+                fig=fig,
+                sample_points=sample_points,
+                center=center,
+                radius=radius,
+                col=col,
+                row=row,
+                color_dict=color_dict,
+            )
 
-        fig.add_traces(
-            px.scatter(
-                sample_points,
-                x=0,
-                y=1,
-                color="case",
-                color_discrete_map=color_dict,
-                opacity=0.7,
-            ).data,
-            cols=col,
-            rows=row,
-        )
-        fig.update_traces(
-            marker_size=10,
-            marker_line_color="black",
-            marker_line_width=2,
-            col=col,
-            row=row,
-        )
-        fig.update_yaxes(scaleanchor="x", scaleratio=1, col=col, row=row)
-        fig.update_xaxes(scaleanchor="y", scaleratio=1, col=col, row=row)
     else:
         params = [col for col in sample_points.columns if col != "case"]
         corr = sample_points[params].corr().abs()
@@ -591,3 +581,96 @@ def _get_model_indices(xs, state):
     for point in state.model_points:
         model_indices = np.concatenate([model_indices, _find_index(xs, point)])
     return model_indices.astype(int)
+
+
+def _plot_sample_points_2d(sample_points, center, radius, fig, row, col, color_dict):
+    fig.add_shape(
+        type="circle",
+        xref="x",
+        yref="y",
+        x0=center[0] - radius,
+        y0=center[1] - radius,
+        x1=center[0] + radius,
+        y1=center[1] + radius,
+        line_width=0.5,
+        col=col,
+        row=row,
+        line_color="grey",
+    )
+
+    fig.add_traces(
+        px.scatter(
+            sample_points,
+            x=0,
+            y=1,
+            color="case",
+            color_discrete_map=color_dict,
+            opacity=0.7,
+        ).data,
+        cols=col,
+        rows=row,
+    )
+    fig.update_traces(
+        marker_size=10,
+        marker_line_color="black",
+        marker_line_width=2,
+        col=col,
+        row=row,
+    )
+    fig.update_yaxes(scaleanchor="x", scaleratio=1, col=col, row=row)
+    fig.update_xaxes(scaleanchor="y", scaleratio=1, col=col, row=row)
+    return fig
+
+
+def _plot_sample_points_3d(sample_points, center, radius, fig, col, row, color_dict):
+    sample_points = sample_points.copy(deep=True)
+    theta = np.linspace(0, 2 * np.pi, 20 * 10)
+    phi = np.linspace(0, np.pi, 20 * 5)
+    uu, vv = np.meshgrid(theta, phi)
+    xs = np.cos(uu) * np.sin(vv) * radius + center[0]
+    ys = np.sin(uu) * np.sin(vv) * radius + center[1]
+    zs = np.cos(vv) * radius + center[2]
+
+    n_cutoffs = 6
+    alphas = np.arange(0, 2 * n_cutoffs + 2, 2) / (n_cutoffs * 2)
+    alphas[0] = alphas[1]
+    alphas = {str(i): alphas[i] for i in range(len(alphas))}
+    cutoffs = np.round([(i / n_cutoffs) for i in range(n_cutoffs + 1)], 10)
+    sample_points["dr_ratio"] = (
+        np.linalg.norm(sample_points.drop("case", axis=1) - center, axis=1).round(10)
+        / radius
+    )
+    sample_points["pos"] = pd.cut(
+        sample_points["dr_ratio"], np.append(cutoffs, np.inf), right=False, labels=False
+    ).astype("str")
+    sample_points["on_the_hull"] = sample_points["dr_ratio"] == 1
+    sample_points["radius"] = radius
+    for pos, alpha in alphas.items():
+        df = sample_points.loc[sample_points["pos"] == pos]
+        fig.add_traces(
+            px.scatter_3d(
+                df,
+                x=0,
+                y=1,
+                z=2,
+                color="case",
+                color_discrete_map=color_dict,
+                opacity=alpha,
+                hover_name="on_the_hull",
+                hover_data=["dr_ratio"],
+            ).data,
+            rows=row,
+            cols=col,
+        )
+    fig.add_surface(
+        x=xs,
+        y=ys,
+        z=zs,
+        colorscale=[[0, "#C0C0C0"], [1, "#C0C0C0"]],
+        showscale=False,
+        opacity=0.3,
+        col=col,
+        row=row,
+        hoverinfo="skip",
+    )
+    return fig
