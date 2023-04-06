@@ -33,7 +33,7 @@ you can impose and how you specify them in estimagic:
 .. code-block:: python
 
     >>> import numpy as np
-    >>> import estimagic as em
+    >>> import tranquilo as em
     >>> def criterion(params):
     ...     offset = np.linspace(1, 0, len(params))
     ...     x = params - offset
@@ -274,7 +274,7 @@ constraint is imposed via the "loc" key. Generalizations for selecting subsets o
 
     .. code-block:: python
 
-        >>> from estimagic.utilities import cov_params_to_matrix
+        >>> from tranquilo.utilities import cov_params_to_matrix
         >>> cov_params_to_matrix(res.params[:3]).round(2) # doctest: +NORMALIZE_WHITESPACE
         array([[1.01, 0.78],
                [0.78, 0.61]])
@@ -313,7 +313,7 @@ constraint is imposed via the "loc" key. Generalizations for selecting subsets o
 
     .. code-block:: python
 
-        >>> from estimagic.utilities import sdcorr_params_to_sds_and_corr
+        >>> from tranquilo.utilities import sdcorr_params_to_sds_and_corr
         >>> sd, corr = sdcorr_params_to_sds_and_corr(res.params[:3])
         >>> sd.round(2)
         array([1. , 0.8])
