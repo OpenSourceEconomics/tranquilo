@@ -1,7 +1,6 @@
 """Test various solvers for quadratic trust-region subproblems."""
 import numpy as np
 import pytest
-from tranquilo.optimization.pounders_auxiliary import MainModel
 from tranquilo.optimization.subsolvers._conjugate_gradient import (
     minimize_trust_cg,
 )
@@ -19,6 +18,13 @@ from tranquilo.optimization.subsolvers.gqtpar import (
     gqtpar,
 )
 from numpy.testing import assert_array_almost_equal as aaae
+from typing import NamedTuple, Union
+
+
+class MainModel(NamedTuple):
+    linear_terms: Union[np.ndarray, None] = None  # shape (n_params,)
+    square_terms: Union[np.ndarray, None] = None  # shape (n_params, n_params)
+
 
 # ======================================================================================
 # Subsolver BNTR

@@ -4,7 +4,6 @@ import warnings
 import numpy as np
 import pytest
 from tranquilo import maximize, minimize
-from tranquilo.config import IS_CYIPOPT_INSTALLED
 from tranquilo.optimization import AVAILABLE_ALGORITHMS
 from numpy.testing import assert_array_almost_equal as aaae
 
@@ -180,68 +179,3 @@ def test_documentation_example(algorithm):
         },
         **kwargs
     )
-
-
-# ======================================================================================
-# Test: selection + reparametrization constraint + nonlinear constraint
-# ======================================================================================
-
-
-@pytest.fixture()
-def general_example():
-    params = {"a": np.array([0.1, 0.3, 0.4, 0.2]), "b": np.array([1.5, 2])}
-
-    def criterion(params):
-        weights = np.array([0, 1, 2, 3])
-        return params["a"] @ weights + params["b"].sum()
-
-    def selector_probability_constraint(params):
-        return params["a"]
-
-    def selector_nonlinear_constraint(params):
-        return {"probs": params["a"][:3][::-1], "unnecessary": params["b"]}
-
-    def constraint(selected):
-        return selected["probs"] @ selected["probs"]
-
-    constraints = [
-        {"type": "probability", "selector": selector_probability_constraint},
-        {
-            "type": "nonlinear",
-            "selector": selector_nonlinear_constraint,
-            "upper_bounds": 0.8,
-            "func": constraint,
-            "tol": 0.01,
-        },
-    ]
-
-    lower_bounds = {"b": np.array([0, 0])}
-    upper_bounds = {"b": np.array([2, 2])}
-
-    kwargs = {
-        "criterion": criterion,
-        "params": params,
-        "constraints": constraints,
-        "lower_bounds": lower_bounds,
-        "upper_bounds": upper_bounds,
-    }
-    return kwargs
-
-
-TEST_CASES = list(itertools.product(["ipopt"], [True, False]))
-
-
-@pytest.mark.skipif(not IS_CYIPOPT_INSTALLED, reason="Needs ipopt")
-@pytest.mark.parametrize("algorithm, skip_checks", TEST_CASES)
-def test_general_example(general_example, algorithm, skip_checks):
-    kwargs = general_example
-
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        res = minimize(algorithm=algorithm, skip_checks=skip_checks, **kwargs)
-
-    optimal_p1 = 0.5 + np.sqrt(3 / 20)  # can be derived analytically
-    optimal_p2 = 1 - optimal_p1
-
-    aaae(res.params["a"], np.array([optimal_p1, optimal_p2, 0, 0]), decimal=4)
-    aaae(res.params["b"], np.array([0.0, 0]), decimal=5)

@@ -1,32 +1,12 @@
 import inspect
 
 from tranquilo.optimization import (
-    bhhh,
-    cyipopt_optimizers,
-    fides_optimizers,
-    nag_optimizers,
-    neldermead,
-    nlopt_optimizers,
-    pounders,
-    pygmo_optimizers,
     scipy_optimizers,
-    simopt_optimizers,
-    tao_optimizers,
 )
 from tranquilo.optimization.tranquilo import tranquilo
 
 MODULES = [
-    cyipopt_optimizers,
-    fides_optimizers,
-    nag_optimizers,
-    nlopt_optimizers,
-    pygmo_optimizers,
     scipy_optimizers,
-    simopt_optimizers,
-    tao_optimizers,
-    bhhh,
-    neldermead,
-    pounders,
     tranquilo,
 ]
 
@@ -39,8 +19,3 @@ for module in MODULES:
             ALL_ALGORITHMS[name] = func
             if func._algorithm_info.is_available:
                 AVAILABLE_ALGORITHMS[name] = func
-
-
-GLOBAL_ALGORITHMS = [
-    name for name, func in ALL_ALGORITHMS.items() if func._algorithm_info.is_global
-]
