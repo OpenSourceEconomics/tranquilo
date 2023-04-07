@@ -3,7 +3,7 @@ import inspect
 import warnings
 from functools import partial
 
-from estimagic.utilities import propose_alternatives
+from tranquilo.utilities import propose_alternatives
 from tranquilo.options import update_option_bundle
 
 

@@ -3,7 +3,7 @@ from functools import partial
 import numpy as np
 from scipy.optimize import Bounds, NonlinearConstraint, minimize
 
-from estimagic.optimization.tiktak import draw_exploration_sample
+from tranquilo.exploration_sample import draw_exploration_sample
 
 
 def solve_multistart(model, x_candidate, lower_bounds, upper_bounds):
