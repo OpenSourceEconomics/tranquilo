@@ -1,0 +1,57 @@
+name: estimagic
+
+channels:
+  - conda-forge
+  - defaults
+  - opensourceeconomics
+
+dependencies:
+  - python=3.8
+  - pip
+  - setuptools_scm
+  - toml
+  - anaconda-client
+  - bokeh>=1.3
+  - ansi2html
+  - click
+  - conda-build
+  - conda-verify
+  - cyipopt
+  - fuzzywuzzy
+  - joblib
+  - cloudpickle
+  - jupyterlab
+  - nbsphinx
+  - numpy
+  - pandas
+  - pdbpp
+  - petsc4py>=3.16.1
+  - pygmo
+  - pytest
+  - pytest-cov
+  - pytest-xdist
+  - scipy>=1.2.1
+  - seaborn
+  - sphinx=2.4.4
+  - pydata-sphinx-theme>=0.3.0
+  - sphinxcontrib-bibtex
+  - sqlalchemy>=1.3
+  - tox-conda
+  - statsmodels
+  - dill
+  - pytask>=0.0.11
+  - nlopt
+  - sphinx-panels
+  - pygmo
+  - chaospy
+
+  - pip:
+      - black
+      - blackcellmagic
+      - bump2version
+      - pre-commit
+      - Py-BOBYQA
+      - DFO-LS
+      - fides>=0.7.1
+      - gif
+      - gif[matplotlib]
