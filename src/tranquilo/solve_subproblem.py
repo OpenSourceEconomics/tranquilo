@@ -14,7 +14,7 @@ from tranquilo.subsolvers.gqtpar import (
     gqtpar,
 )
 from tranquilo.subsolvers.gqtpar_fast import gqtpar_fast
-from tranquilo.wrapped_subsolvers import (
+from tranquilo.subsolvers.wrapped_subsolvers import (
     slsqp_sphere,
     solve_multistart,
 )
