@@ -13,7 +13,6 @@ include CODE_OF_CONDUCT.md
 
 recursive-include src *.css
 recursive-include src *.csv
-recursive-include src *.db
 recursive-include src *.html
 recursive-include src *.py
 

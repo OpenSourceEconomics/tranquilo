@@ -10,7 +10,6 @@ dependencies:
   - pytest  # dev, tests
   - pytest-cov  # tests
   - pytest-xdist  # dev, tests
-  - click  # run, tests
   - estimagic  # run, tests
   - numba  # run, tests
   - numpy>=1.17.0  # run, tests

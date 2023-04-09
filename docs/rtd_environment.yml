@@ -4,29 +4,25 @@ channels:
   - conda-forge
   - nodefaults
 dependencies:
-  - python=3.9
-  - pip
+  - python=3.10
   - setuptools_scm
   - toml
-  - black
-  - sphinx
-  - sphinxcontrib-bibtex
-  - sphinx-copybutton
-  - sphinx-panels
+  - pip
+  - estimagic
   - ipython
   - ipython_genutils
-  - myst-nb
-  - pydata-sphinx-theme<=0.12.0
-  - pybaum
+  - joblib
   - matplotlib
-  - seaborn
+  - myst-nb
   - numpy
   - pandas
-  - scipy
-  - patsy
-  - joblib
   - plotly
-  - ipython
+  - scipy
+  - seaborn
+  - sphinx
+  - sphinx-copybutton
+  - sphinx-panels
+  - sphinxcontrib-bibtex
+  - pydata-sphinx-theme<=0.12.0
   - pip:
       - ../
-      - kaleido
