@@ -1,4 +1,0 @@
-(changes)=
-
-```{include} ../../../CHANGES.md
-```
