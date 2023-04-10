@@ -60,18 +60,13 @@ def test_accept_simple(
         indices = np.array(list(eval_info)).repeat(np.array(list(eval_info.values())))
         history.add_evals(indices, -indices)
 
-    candidate_x = subproblem_solution.x
-    candidate_index = history.add_xs(candidate_x)
-
-    wrapped_criterion({candidate_index: 2})
-
     res_got = _accept_simple(
         subproblem_solution=subproblem_solution,
         state=state,
         history=history,
-        candidate_x=candidate_x,
-        candidate_index=candidate_index,
+        wrapped_criterion=wrapped_criterion,
         min_improvement=0.0,
+        n_evals=2,
     )
 
     assert res_got.accepted

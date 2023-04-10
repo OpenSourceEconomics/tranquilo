@@ -55,26 +55,19 @@ def _accept_classic(
         subproblem_solution (SubproblemResult): Result of the subproblem solution.
         state (State): Namedtuple containing the trustregion, criterion value of
             previously accepted point, indices of model points, etc.
-        history (History): The tranquilo history.
         wrapped_criterion (callable): The criterion function.
         min_improvement (float): Minimum improvement required to accept a point.
-
     Returns:
-        AcceptanceResult: The acceptance result.
+        AcceptanceResult
 
     """
-    candidate_x = subproblem_solution.x
-    candidate_index = history.add_xs(candidate_x)
-
-    wrapped_criterion({candidate_index: 1})
-
     out = _accept_simple(
         subproblem_solution=subproblem_solution,
         state=state,
         history=history,
-        candidate_x=candidate_x,
-        candidate_index=candidate_index,
+        wrapped_criterion=wrapped_criterion,
         min_improvement=min_improvement,
+        n_evals=1,
     )
     return out
 
@@ -130,13 +123,24 @@ def _accept_classic_speculative(
     eval_info = {**candidate_eval_info, **speculative_eval_info}
     wrapped_criterion(eval_info)
 
-    out = _accept_simple(
-        subproblem_solution=subproblem_solution,
-        state=state,
-        history=history,
+    candidate_fval = np.mean(history.get_fvals(candidate_index))
+
+    actual_improvement = -(candidate_fval - state.fval)
+
+    rho = calculate_rho(
+        actual_improvement=actual_improvement,
+        expected_improvement=subproblem_solution.expected_improvement,
+    )
+
+    is_accepted = actual_improvement >= min_improvement
+
+    out = _get_acceptance_result(
         candidate_x=candidate_x,
+        candidate_fval=candidate_fval,
         candidate_index=candidate_index,
-        min_improvement=min_improvement,
+        rho=rho,
+        is_accepted=is_accepted,
+        old_state=state,
     )
     return out
 
@@ -150,18 +154,13 @@ def accept_naive_noisy(
     min_improvement,
 ):
     """Do a naive noisy acceptance step, averaging over a fixed number of points."""
-    candidate_x = subproblem_solution.x
-    candidate_index = history.add_xs(candidate_x)
-
-    wrapped_criterion({candidate_index: 5})
-
     out = _accept_simple(
         subproblem_solution=subproblem_solution,
         state=state,
         history=history,
-        candidate_x=candidate_x,
-        candidate_index=candidate_index,
+        wrapped_criterion=wrapped_criterion,
         min_improvement=min_improvement,
+        n_evals=5,
     )
     return out
 
@@ -170,10 +169,10 @@ def _accept_simple(
     subproblem_solution,
     state,
     history,
-    candidate_x,
-    candidate_index,
     *,
+    wrapped_criterion,
     min_improvement,
+    n_evals,
 ):
     """Do a classic acceptance step for a trustregion algorithm.
 
@@ -181,17 +180,18 @@ def _accept_simple(
         subproblem_solution (SubproblemResult): Result of the subproblem solution.
         state (State): Namedtuple containing the trustregion, criterion value of
             previously accepted point, indices of model points, etc.
-        history (History): The tranquilo history.
-        batch_size (int): Number of points to evaluate in parallel.
-        sample_points (callable): Function that samples points from the trustregion.
-        rng (np.random.Generator): Random number generator.
         wrapped_criterion (callable): The criterion function.
         min_improvement (float): Minimum improvement required to accept a point.
-
     Returns:
-        AcceptanceResult: The acceptance result.
+        AcceptanceResult
 
     """
+    candidate_x = subproblem_solution.x
+
+    candidate_index = history.add_xs(candidate_x)
+
+    wrapped_criterion({candidate_index: n_evals})
+
     candidate_fval = np.mean(history.get_fvals(candidate_index))
 
     actual_improvement = -(candidate_fval - state.fval)
@@ -220,9 +220,6 @@ def accept_noisy(
     state,
     noise_variance,
     history,
-    batch_size,
-    sample_points,
-    rng,
     *,
     wrapped_criterion,
     min_improvement,
