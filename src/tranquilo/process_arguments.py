@@ -13,7 +13,6 @@ from tranquilo.fit_models import get_fitter
 from tranquilo.history import History
 from tranquilo.options import (
     ConvOptions,
-    StagnationOptions,
     StopOptions,
     get_default_acceptance_decider,
     get_default_aggregator,
@@ -25,6 +24,7 @@ from tranquilo.options import (
     get_default_radius_options,
     get_default_sample_size,
     get_default_search_radius_factor,
+    get_default_stagnation_options,
     update_option_bundle,
 )
 from tranquilo.region import Region
@@ -110,20 +110,19 @@ def process_arguments(
     x = _process_x(x)
     noisy = _process_noisy(noisy)
     n_cores = _process_n_cores(n_cores)
-    stagnation_options = update_option_bundle(StagnationOptions(), stagnation_options)
     n_evals_per_point = int(n_evals_per_point)
     sampling_rng = _process_seed(seed)
-    n_evals_at_start = _process_n_evals_at_start(
-        n_evals_at_start,
-        noisy,
-    )
 
     # process options that depend on arguments with static defaults
     search_radius_factor = _process_search_radius_factor(search_radius_factor, functype)
     batch_size = _process_batch_size(batch_size, n_cores)
+    stagnation_options = update_option_bundle(
+        get_default_stagnation_options(batch_size), stagnation_options
+    )
     radius_options = update_option_bundle(get_default_radius_options(x), radius_options)
     model_type = _process_model_type(model_type, functype)
     acceptance_decider = _process_acceptance_decider(acceptance_decider, noisy)
+    n_evals_at_start = _process_n_evals_at_start(n_evals_at_start, noisy, batch_size)
 
     # process options that depend on arguments with dependent defaults
     target_sample_size = _process_sample_size(
@@ -302,7 +301,7 @@ def _process_residualize(residualize, model_fitter):
     return out
 
 
-def _process_n_evals_at_start(n_evals, noisy):
+def _process_n_evals_at_start(n_evals, noisy, batch_size):
     if n_evals is None:
         out = get_default_n_evals_at_start(noisy)
     else:
@@ -311,4 +310,10 @@ def _process_n_evals_at_start(n_evals, noisy):
     if out < 1:
         raise ValueError("n_initial_acceptance_evals must be non-negative.")
 
+    out = _ceil_to_multiple(out, multiple=batch_size)
+
     return out
+
+
+def _ceil_to_multiple(n, multiple):
+    return int(np.ceil(n / multiple) * multiple)
