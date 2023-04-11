@@ -319,12 +319,15 @@ def _internal_tranquilo(
         # update state for beginning of next iteration
         # ==============================================================================
 
-        new_radius = adjust_radius(
-            radius=state.trustregion.radius,
-            rho=acceptance_result.rho,
-            step_length=acceptance_result.step_length,
-            options=radius_options,
-        )
+        if state.suggestive_radius is not None:
+            new_radius = state.suggestive_radius
+        else:
+            new_radius = adjust_radius(
+                radius=state.trustregion.radius,
+                rho=acceptance_result.rho,
+                step_length=acceptance_result.step_length,
+                options=radius_options,
+            )
 
         new_trustregion = state.trustregion._replace(
             center=acceptance_result.x, radius=new_radius
@@ -440,6 +443,9 @@ class State(NamedTuple):
 
     relative_step_length: float = None
     """The step_length divided by the radius of the trustregion."""
+
+    suggestive_radius: float = None
+    """Radius suggested by acceptance decider if rho cannot be sensibly computed."""
 
 
 def _is_converged(states, options):
