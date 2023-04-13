@@ -203,17 +203,19 @@ def _accept_classic_line_search(
     candidate_on_border = _is_on_border(state.trustregion, x=candidate_x, rtol=1e-12)
 
     if candidate_on_border:
-        # a better point is most likely outside the trustregion, so we perform a line
-        # search outside of the trustregion
-        alpha_grid = 2 ** np.arange(1, batch_size)
+        # a better point is most likely outside the trustregion, so we sample new points
+        # further away from the trustregion in the direction of the candidate
+        alpha_grid = np.linspace(start=1, stop=batch_size, num=batch_size)[1:]
+    else:
+        # a better point is most likely inside the trustregion, so we sample new points
+        # between the candidate and the center of the trustregion
+        alpha_grid = np.linspace(start=0, stop=1, num=batch_size + 1)[1:-1]
 
-        new_xs = _sample_on_line(
-            start_point=state.x, direction_point=candidate_x, alpha_grid=alpha_grid
-        )
-
-        new_indices = history.add_xs(new_xs)
-
-        eval_info.update({i: 1 for i in new_indices})
+    new_xs = _sample_on_line(
+        start_point=state.x, direction_point=candidate_x, alpha_grid=alpha_grid
+    )
+    new_indices = history.add_xs(new_xs)
+    eval_info.update({i: 1 for i in new_indices})
 
     wrapped_criterion(eval_info)
 
@@ -222,12 +224,13 @@ def _accept_classic_line_search(
 
     candidate_fval = np.mean(history.get_fvals(candidate_index))
 
-    if candidate_on_border:
-        new_fvals = history.get_fvals(new_indices)
-        new_fvals = pd.Series({i: np.mean(fvals) for i, fvals in new_fvals.items()})
-        new_fval_argmin = new_fvals.idxmin()
+    new_fvals = history.get_fvals(new_indices)
+    new_fvals = pd.Series({i: np.mean(fvals) for i, fvals in new_fvals.items()})
+    new_fval_argmin = new_fvals.idxmin()
 
-    if candidate_on_border and new_fvals.loc[new_fval_argmin] < candidate_fval:
+    found_better_candidate = new_fvals.loc[new_fval_argmin] < candidate_fval
+
+    if found_better_candidate:
         # a better point was found during the line search
         candidate_x = history.get_xs(new_fval_argmin)
         candidate_fval = new_fvals.loc[new_fval_argmin]
@@ -235,9 +238,24 @@ def _accept_classic_line_search(
 
         actual_improvement = -(candidate_fval - state.fval)
 
-        rho = None
-        suggestive_radius = (3 / 4) * np.linalg.norm(candidate_x - state.x)
-
+        if candidate_on_border:
+            rho = None
+            suggestive_radius = (3 / 4) * np.linalg.norm(candidate_x - state.x)
+        else:
+            # if the better point was found inside the trustregion, we use the standard
+            # radius updating scheme
+            fval_old = state.model.predict(
+                state.trustregion.map_to_unit(state.trustregion.center)
+            )
+            fval_candidate = state.model.predict(
+                state.trustregion.map_to_unit(candidate_x)
+            )
+            expected_improvement = -(fval_candidate - fval_old)
+            rho = calculate_rho(
+                actual_improvement=actual_improvement,
+                expected_improvement=expected_improvement,
+            )
+            suggestive_radius = None
     else:
         # no better point was found during the line search
         actual_improvement = -(candidate_fval - state.fval)
