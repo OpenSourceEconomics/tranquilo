@@ -13,7 +13,7 @@ def get_default_batch_size(n_cores):
 
 
 def get_default_acceptance_decider(noisy):
-    return "noisy" if noisy else "classic"
+    return "naive_noisy" if noisy else "classic"
 
 
 def get_default_sample_size(model_type, x):
@@ -111,11 +111,11 @@ class RadiusOptions(NamedTuple):
 
 
 class AcceptanceOptions(NamedTuple):
-    confidence_level: float = 0.8
-    power_level: float = 0.8
+    confidence_level: float = 0.95
+    power_level: float = 0.95
     n_initial: int = 5
-    n_min: int = 5
-    n_max: int = 100
+    n_min: int = 4
+    n_max: int = 50
     min_improvement: float = 0.0
 
 

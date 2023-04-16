@@ -80,7 +80,7 @@ def accept_naive_noisy(
         history=history,
         wrapped_criterion=wrapped_criterion,
         min_improvement=min_improvement,
-        n_evals=5,
+        n_evals=10,
     )
     return out
 

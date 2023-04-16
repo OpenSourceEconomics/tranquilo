@@ -247,7 +247,7 @@ def _internal_tranquilo(
                 break
 
         # ==============================================================================
-        # fit noise model based on previous acceptance samples
+        # fit noise models
         # ==============================================================================
 
         if noisy:
