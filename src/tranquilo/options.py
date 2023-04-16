@@ -169,13 +169,13 @@ class SamplerOptions(NamedTuple):
 
 
 class NoiseAdaptationOptions(NamedTuple):
-    rho_noise_n_draws: int = 50
-    high_rho: float = 0.99
-    low_rho: float = 0.5
-    majority_share: float = 0.9
+    rho_noise_n_draws: int = 100
+    high_rho: float = 0.6
+    low_rho: float = 0.1
+    majority_share: float = 0.8
     ignore_corelation: bool = True
     min_n_evals: int = 1
-    max_n_evals: int = 50
+    max_n_evals: int = 20
 
 
 def update_option_bundle(default_options, user_options=None):

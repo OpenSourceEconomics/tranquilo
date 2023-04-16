@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def adjust_radius(radius, rho, step_length, options):
+def adjust_radius(radius, rho, step_length, options, n_evals_is_increased):
     """Adjust the trustregion radius based on relative improvement and stepsize.
 
     This is just a slight generalization of the pounders radius adjustment. With default
@@ -16,6 +16,7 @@ def adjust_radius(radius, rho, step_length, options):
             parameter vectors.
         step (np.ndarray): The step between the last two accepted parameter vectors.
         options (NamedTuple): Options for radius management.
+        n_evals_is_increased (bool): Whether the number of evaluations was increased.
 
     Returns:
         float: The updated radius.
@@ -25,7 +26,7 @@ def adjust_radius(radius, rho, step_length, options):
 
     if rho >= options.rho_increase and is_large_step:
         new_radius = radius * options.expansion_factor
-    elif rho >= options.rho_decrease:
+    elif rho >= options.rho_decrease or n_evals_is_increased:
         new_radius = radius
     else:
         new_radius = radius * options.shrinking_factor

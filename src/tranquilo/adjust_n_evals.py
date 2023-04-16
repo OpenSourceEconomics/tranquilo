@@ -8,18 +8,20 @@ def adjust_n_evals(n_evals, rho_noise, options):
 
     Returns:
         int: The updated number of evaluations.
+        bool: Whether the number of evaluations was increased.
 
     """
     # most rhos are very high -> decrease
     if (rho_noise > options.high_rho).mean() > options.majority_share:
-        out = max(n_evals - 1, options.min_n_evals)
+        new_n_evals = max(n_evals - 1, options.min_n_evals)
 
     # most rhos are above rho low -> keep constant
     elif (rho_noise > options.low_rho).mean() > options.majority_share:
-        out = n_evals
+        new_n_evals = n_evals
 
     # many rhos are below rho low -> increase
     else:
-        out = min(n_evals + 1, options.max_n_evals)
+        new_n_evals = min(n_evals + 1, options.max_n_evals)
 
-    return out
+    is_increased = new_n_evals > n_evals
+    return new_n_evals, is_increased
