@@ -15,6 +15,8 @@ from tranquilo.models import (
 )
 from tranquilo.process_arguments import process_arguments
 from tranquilo.region import Region
+from tranquilo.rho_noise import simulate_rho_noise
+from tranquilo.adjust_n_evals import adjust_n_evals
 
 
 # wrapping gives us the signature and docstring of process arguments
@@ -31,6 +33,7 @@ def _internal_tranquilo(
     conv_options,
     stop_options,
     radius_options,
+    noise_adaptation_options,
     batch_size,
     target_sample_size,
     stagnation_options,
@@ -39,6 +42,7 @@ def _internal_tranquilo(
     n_evals_at_start,
     trustregion,
     sampling_rng,
+    simulation_rng,
     history,
     sample_points,
     solve_subproblem,
@@ -251,13 +255,19 @@ def _internal_tranquilo(
         # ==============================================================================
 
         if noisy:
-            scalar_noise_variance = estimate_variance(
+            noise_variance = estimate_variance(
                 trustregion=state.trustregion,
                 history=history,
                 model_type="scalar",
             )
+            noise_cov = estimate_variance(
+                trustregion=state.trustregion,
+                history=history,
+                model_type="vector",
+            )
         else:
-            scalar_noise_variance = None
+            noise_variance = None
+            noise_cov = None
 
         # ==============================================================================
         # acceptance decision
@@ -267,7 +277,7 @@ def _internal_tranquilo(
             subproblem_solution=sub_sol,
             state=state,
             wrapped_criterion=evaluate_criterion,
-            noise_variance=scalar_noise_variance,
+            noise_variance=noise_variance,
             history=history,
         )
 
@@ -287,7 +297,7 @@ def _internal_tranquilo(
         states.append(state)
 
         # ==============================================================================
-        # update state for beginning of next iteration
+        # update trust region radius
         # ==============================================================================
 
         new_radius = adjust_radius(
@@ -297,6 +307,33 @@ def _internal_tranquilo(
             options=radius_options,
         )
 
+        # ==============================================================================
+        # estimate rho noise and adjust n_evals_per_point
+        # ==============================================================================
+
+        if noisy:
+            rho_noise_vec = simulate_rho_noise(
+                xs=model_xs,
+                vector_model=vector_model,
+                old_vector_model=state.vector_model,
+                trustregion=state.trustregion,
+                noise_cov=noise_cov,
+                model_fitter=fit_model,
+                model_aggregator=aggregate_model,
+                subsolver=solve_subproblem,
+                rng=simulation_rng,
+                options=noise_adaptation_options,
+            )
+
+            n_evals_per_point = adjust_n_evals(
+                n_evals=n_evals_per_point,
+                rho_noise=rho_noise_vec,
+                options=noise_adaptation_options,
+            )
+
+        # ==============================================================================
+        # update state for beginning of next iteration
+        # ==============================================================================
         new_trustregion = state.trustregion._replace(
             center=acceptance_result.x, radius=new_radius
         )

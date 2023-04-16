@@ -6,14 +6,14 @@ from tranquilo.acceptance_decision import calculate_rho
 def simulate_rho_noise(
     xs,
     vector_model,
+    old_vector_model,
     trustregion,
     noise_cov,
     model_fitter,
     model_aggregator,
     subsolver,
     rng,
-    n_draws=100,
-    ignore_corelation=True,
+    options,
 ):
     """Simulate a rho that would obtain on average if there is no approximation error.
 
@@ -29,6 +29,8 @@ def simulate_rho_noise(
         vector_model (VectorModel): A vector surrogate model that is taken as true model
             for the simulation. In many cases this model was fitted on xs but this is
             not a requirement.
+        old_vector_model (VectorModel): A vector surrogate model that is potentially
+            used to fit the new model (if residualize=True).
         trustregion (Region): The trustregion in which the optimization is performed.
         noise_cov(np.ndarray): Covariance matrix of the noise. The noise is assumed to
             be drawn from a multivariate normal distribution with mean zero and this
@@ -38,11 +40,12 @@ def simulate_rho_noise(
             scalar model.
         subsolver (callable): A function that solves the subproblem.
         rng (np.random.Generator): Random number generator.
-        n_draws (int): Number of draws used to estimate the rho noise.
-        ignore_corelation (bool): If True, the noise is assumed to be uncorrelated and
-            only the diagonal entries of the covariance matrix are used.
+        options (NoiseAdaptationOptions): Options for the noise adaptation.
 
     """
+    n_draws = options.rho_noise_n_draws
+    ignore_corelation = options.ignore_corelation
+
     n_samples, n_params = xs.shape
     n_residuals = len(noise_cov)
 
@@ -69,7 +72,7 @@ def simulate_rho_noise(
             sim_fvecs,
             weights=None,
             region=trustregion,
-            old_model=None,
+            old_model=old_vector_model,
         )
         sim_scalar_model = model_aggregator(vector_model=sim_vector_model)
         sim_sub_sol = subsolver(sim_scalar_model, trustregion)

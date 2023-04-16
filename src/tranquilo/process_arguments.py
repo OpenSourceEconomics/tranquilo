@@ -26,6 +26,7 @@ from tranquilo.options import (
     get_default_sample_size,
     get_default_search_radius_factor,
     update_option_bundle,
+    NoiseAdaptationOptions,
 )
 from tranquilo.region import Region
 from tranquilo.sample_points import get_sampler
@@ -70,6 +71,7 @@ def process_arguments(
     # bundled advanced options
     radius_options=None,
     stagnation_options=None,
+    noise_adaptation_options=None,
     # component names and related options
     sampler="optimal_hull",
     sampler_options=None,
@@ -113,9 +115,14 @@ def process_arguments(
     stagnation_options = update_option_bundle(StagnationOptions(), stagnation_options)
     n_evals_per_point = int(n_evals_per_point)
     sampling_rng = _process_seed(seed)
+    simulation_rng = _process_seed(seed + 1000)
+
     n_evals_at_start = _process_n_evals_at_start(
         n_evals_at_start,
         noisy,
+    )
+    noise_adaptation_options = update_option_bundle(
+        NoiseAdaptationOptions(), noise_adaptation_options
     )
 
     # process options that depend on arguments with static defaults
@@ -198,11 +205,13 @@ def process_arguments(
         "batch_size": batch_size,
         "target_sample_size": target_sample_size,
         "stagnation_options": stagnation_options,
+        "noise_adaptation_options": noise_adaptation_options,
         "search_radius_factor": search_radius_factor,
         "n_evals_per_point": n_evals_per_point,
         "n_evals_at_start": n_evals_at_start,
         "trustregion": trustregion,
         "sampling_rng": sampling_rng,
+        "simulation_rng": simulation_rng,
         "history": history,
         "sample_points": sample_points,
         "solve_subproblem": solve_subproblem,
