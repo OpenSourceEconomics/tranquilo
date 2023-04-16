@@ -175,7 +175,7 @@ class NoiseAdaptationOptions(NamedTuple):
     majority_share: float = 0.8
     ignore_corelation: bool = True
     min_n_evals: int = 1
-    max_n_evals: int = 20
+    max_n_evals: int = 30
 
 
 def update_option_bundle(default_options, user_options=None):

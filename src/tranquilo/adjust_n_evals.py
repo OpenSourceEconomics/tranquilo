@@ -12,11 +12,11 @@ def adjust_n_evals(n_evals, rho_noise, options):
 
     """
     # most rhos are very high -> decrease
-    if (rho_noise > options.high_rho).mean() > options.majority_share:
+    if (rho_noise > options.high_rho).mean() > 0.7:
         new_n_evals = max(n_evals - 1, options.min_n_evals)
 
     # most rhos are above rho low -> keep constant
-    elif (rho_noise > options.low_rho).mean() > options.majority_share:
+    elif (rho_noise > options.low_rho).mean() > 0.9:
         new_n_evals = n_evals
 
     # many rhos are below rho low -> increase
