@@ -131,6 +131,7 @@ def _accept_simple(
         rho=rho,
         is_accepted=is_accepted,
         old_state=state,
+        n_evals=n_evals,
     )
 
     return res
@@ -189,6 +190,7 @@ def accept_noisy(
         rho=rho,
         is_accepted=is_accepted,
         old_state=state,
+        n_evals=n_2,
     )
 
     return res
@@ -204,6 +206,7 @@ class AcceptanceResult(NamedTuple):
     relative_step_length: float
     candidate_index: int
     candidate_x: np.ndarray
+    n_evals_acceptance: int
 
 
 def _get_acceptance_result(
@@ -213,6 +216,7 @@ def _get_acceptance_result(
     rho,
     is_accepted,
     old_state,
+    n_evals,
 ):
     x = candidate_x if is_accepted else old_state.x
     fval = candidate_fval if is_accepted else old_state.fval
@@ -230,6 +234,7 @@ def _get_acceptance_result(
         relative_step_length=relative_step_length,
         candidate_index=candidate_index,
         candidate_x=candidate_x,
+        n_evals_acceptance=n_evals,
     )
     return out
 

@@ -94,6 +94,7 @@ def test_get_acceptance_result():
         rho=rho,
         old_state=old_state,
         is_accepted=True,
+        n_evals=1,
     )
 
     assert_array_equal(ar_when_accepted.x, candidate_x)
@@ -110,6 +111,7 @@ def test_get_acceptance_result():
         rho=rho,
         old_state=old_state,
         is_accepted=False,
+        n_evals=1,
     )
 
     assert_array_equal(ar_when_not_accepted.x, old_state.x)

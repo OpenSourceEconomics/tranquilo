@@ -302,6 +302,7 @@ def _internal_tranquilo(
             old_indices_used=np.intersect1d(model_indices, old_indices),
             old_indices_discarded=np.setdiff1d(old_indices, model_indices),
             **acceptance_result._asdict(),
+            n_evals_per_point=n_evals_per_point,
         )
 
         states.append(state)
@@ -460,6 +461,10 @@ class State(NamedTuple):
 
     relative_step_length: float = None
     """The step_length divided by the radius of the trustregion."""
+
+    n_evals_per_point: int = None
+
+    n_evals_acceptance: int = None
 
 
 def _is_converged(states, options):
