@@ -13,7 +13,7 @@ def get_default_batch_size(n_cores):
 
 
 def get_default_acceptance_decider(noisy):
-    return "naive_noisy" if noisy else "classic"
+    return "noisy" if noisy else "classic"
 
 
 def get_default_sample_size(model_type, x):
@@ -73,6 +73,10 @@ def get_default_aggregator(functype, model_type):
 
 def get_default_n_evals_at_start(noisy):
     return 5 if noisy else 1
+
+
+def get_default_n_evals_per_point(noisy, noise_adaptation_options):
+    return noise_adaptation_options.min_n_evals if noisy else 1
 
 
 class StopOptions(NamedTuple):
