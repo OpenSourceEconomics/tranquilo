@@ -109,6 +109,8 @@ def _internal_tranquilo(
             indices=old_indices,
             state=state,
             target_size=target_sample_size,
+            history=history,
+            n_evals_per_point=n_evals_per_point,
         )
         # ==============================================================================
         # determine number of evaluations needed at existing xs
@@ -327,6 +329,7 @@ def _internal_tranquilo(
 
             n_evals_per_point, n_evals_is_increased = adjust_n_evals(
                 n_evals=n_evals_per_point,
+                rho=acceptance_result.rho,
                 rho_noise=rho_noise_vec,
                 options=noise_adaptation_options,
             )

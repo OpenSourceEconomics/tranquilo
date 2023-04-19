@@ -13,7 +13,7 @@ from tranquilo.fit_models import get_fitter
 from tranquilo.history import History
 from tranquilo.options import (
     ConvOptions,
-    StagnationOptions,
+    get_default_stagnation_options,
     StopOptions,
     get_default_acceptance_decider,
     get_default_aggregator,
@@ -113,7 +113,10 @@ def process_arguments(
     x = _process_x(x)
     noisy = _process_noisy(noisy)
     n_cores = _process_n_cores(n_cores)
-    stagnation_options = update_option_bundle(StagnationOptions(), stagnation_options)
+    stagnation_options = update_option_bundle(
+        get_default_stagnation_options(noisy),
+        stagnation_options,
+    )
     sampling_rng = _process_seed(seed)
     simulation_rng = _process_seed(seed + 1000)
 

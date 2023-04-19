@@ -1,4 +1,4 @@
-def adjust_n_evals(n_evals, rho_noise, options):
+def adjust_n_evals(n_evals, rho, rho_noise, options):
     """Adjust the number of evaluations based on the noise adaptation options.
 
     Args:
@@ -16,7 +16,7 @@ def adjust_n_evals(n_evals, rho_noise, options):
         new_n_evals = max(n_evals - 1, options.min_n_evals)
 
     # most rhos are above rho low -> keep constant
-    elif (rho_noise > options.low_rho).mean() > 0.9:
+    elif (rho_noise > options.low_rho).mean() > 0.9 or rho >= 0.1:
         new_n_evals = n_evals
 
     # many rhos are below rho low -> increase

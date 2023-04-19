@@ -79,6 +79,20 @@ def get_default_n_evals_per_point(noisy, noise_adaptation_options):
     return noise_adaptation_options.min_n_evals if noisy else 1
 
 
+def get_default_stagnation_options(noisy):
+    if noisy:
+        out = StagnationOptions(
+            min_relative_step_keep=0.0,
+            drop=False,
+        )
+    else:
+        out = StagnationOptions(
+            min_relative_step_keep=0.125,
+            drop=True,
+        )
+    return out
+
+
 class StopOptions(NamedTuple):
     """Criteria for stopping without successful convergence."""
 
@@ -124,11 +138,11 @@ class AcceptanceOptions(NamedTuple):
 
 
 class StagnationOptions(NamedTuple):
-    min_relative_step_keep: float = 0.125
+    min_relative_step_keep: float
+    drop: bool
     min_relative_step: float = 0.05
     sample_increment: int = 1
     max_trials: int = 1
-    drop: bool = True
 
 
 class SubsolverOptions(NamedTuple):
