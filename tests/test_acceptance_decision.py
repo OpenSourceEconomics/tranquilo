@@ -5,13 +5,11 @@ import pytest
 from tranquilo.acceptance_decision import (
     _accept_simple,
     _get_acceptance_result,
-    _accept_classic_speculative,
     calculate_rho,
 )
 from tranquilo.history import History
 from tranquilo.region import Region
 from tranquilo.solve_subproblem import SubproblemResult
-from tranquilo.sample_points import get_sampler
 from numpy.testing import assert_array_equal
 
 # ======================================================================================
@@ -76,42 +74,6 @@ def test_accept_simple(
     assert_array_equal(res_got.candidate_x, 1.0 + np.arange(2))
 
 
-def test_accept_classic_speculative(subproblem_solution):
-    history = History(functype="scalar")
-    trustregion = Region(center=np.zeros(2), radius=2.0)
-    state = State(x=np.arange(2.0), trustregion=trustregion, fval=0.25, index=0)
-
-    idxs = history.add_xs(np.arange(10).reshape(5, 2))
-
-    history.add_evals(idxs.repeat(2), np.arange(10))
-
-    rng = np.random.default_rng(12345)
-    sample_points = get_sampler(sampler="random_hull")
-
-    def wrapped_criterion(eval_info):
-        indices = np.array(list(eval_info)).repeat(np.array(list(eval_info.values())))
-        history.add_evals(indices, -indices)
-
-    res_got = _accept_classic_speculative(
-        subproblem_solution=subproblem_solution,
-        state=state,
-        history=history,
-        batch_size=7,
-        sample_points=sample_points,
-        rng=rng,
-        wrapped_criterion=wrapped_criterion,
-        min_improvement=0.0,
-    )
-
-    assert history.n_fun == 17  # 10 (prior) + 7 (acceptance step)
-    assert history.n_xs == 12  # 5 (prior) + 7 (acceptance step)
-    assert res_got.accepted
-    assert res_got.index == 5
-    assert res_got.candidate_index == 5
-    assert_array_equal(res_got.x, subproblem_solution.x)
-    assert_array_equal(res_got.candidate_x, 1.0 + np.arange(2))
-
-
 # ======================================================================================
 # Test _get_acceptance_result
 # ======================================================================================
@@ -132,7 +94,6 @@ def test_get_acceptance_result():
         rho=rho,
         old_state=old_state,
         is_accepted=True,
-        suggestive_radius=None,
     )
 
     assert_array_equal(ar_when_accepted.x, candidate_x)
@@ -149,7 +110,6 @@ def test_get_acceptance_result():
         rho=rho,
         old_state=old_state,
         is_accepted=False,
-        suggestive_radius=None,
     )
 
     assert_array_equal(ar_when_not_accepted.x, old_state.x)

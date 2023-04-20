@@ -236,24 +236,6 @@ def test_tranquilo_with_binding_bounds(algorithm):
 
 
 # ======================================================================================
-# Scalar Tranquilo with non-standard acceptance deciders
-# ======================================================================================
-
-
-@pytest.mark.parametrize("acceptance_decider", ["classic_line_search"])
-def test_internal_tranquilo_scalar_sphere_acceptance_decider(
-    acceptance_decider,
-):
-    res = tranquilo(
-        criterion=lambda x: x @ x,
-        x=np.arange(4),
-        acceptance_decider=acceptance_decider,
-        batch_size=3,
-    )
-    aaae(res["solution_x"], np.zeros(4), decimal=4)
-
-
-# ======================================================================================
 # Helper functions
 # ======================================================================================
 

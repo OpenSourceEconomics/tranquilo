@@ -13,10 +13,7 @@ from tranquilo.models import (
     ScalarModel,
     VectorModel,
 )
-from tranquilo.process_arguments import (
-    process_arguments,
-    _ceil_to_multiple,
-)
+from tranquilo.process_arguments import process_arguments, ceil_to_multiple
 from tranquilo.region import Region
 
 
@@ -51,7 +48,10 @@ def _internal_tranquilo(
     estimate_variance,
     accept_candidate,
 ):
-    eval_info = {0: n_evals_at_start}
+    if n_evals_at_start > 1:
+        eval_info = {0: ceil_to_multiple(n_evals_at_start, multiple=batch_size)}
+    else:
+        eval_info = {0: 1}
 
     evaluate_criterion(eval_info)
 
@@ -114,16 +114,8 @@ def _internal_tranquilo(
         # sample points if necessary and do simple iteration
         # ==========================================================================
 
-        n_new_points_candidate = max(0, target_sample_size - len(model_xs))
-
-        (
-            n_new_points,
-            list_of_n_evals_per_point,
-        ) = get_batch_consistent_number_of_eval_points(
-            n_new_points=n_new_points_candidate,
-            n_evals_per_point=n_evals_per_point,
-            batch_size=batch_size,
-        )
+        n_new_points = max(0, target_sample_size - len(model_xs))
+        n_new_points = ceil_to_multiple(n_new_points, multiple=batch_size)
 
         new_xs = sample_points(
             trustregion=state.trustregion,
@@ -134,20 +126,23 @@ def _internal_tranquilo(
 
         new_indices = history.add_xs(new_xs)
 
-        eval_info = {i: list_of_n_evals_per_point[k] for k, i in enumerate(new_indices)}
+        eval_info = {i: n_evals_per_point for i in new_indices}
 
         evaluate_criterion(eval_info)
 
         model_indices = _concatenate_indices(model_indices, new_indices)
 
         model_xs = history.get_xs(model_indices)
-        model_data = history.get_model_data(
+        model_xs, model_fvecs = history.get_model_data(
             x_indices=model_indices,
             average=True,
         )
 
+        # model_fvecs = np.clip(model_fvecs, a_min=-1e10, a_max=1e10)
+
         vector_model = fit_model(
-            *model_data,
+            x=model_xs,
+            y=model_fvecs,
             region=state.trustregion,
             old_model=state.vector_model,
             weights=None,
@@ -180,13 +175,14 @@ def _internal_tranquilo(
                     n_to_drop=1,
                 )
 
-                model_data = history.get_model_data(
+                model_xs, model_fvecs = history.get_model_data(
                     x_indices=model_indices,
                     average=True,
                 )
 
                 vector_model = fit_model(
-                    *model_data,
+                    x=model_xs,
+                    y=model_fvecs,
                     region=state.trustregion,
                     old_model=state.vector_model,
                     weights=None,
@@ -210,35 +206,26 @@ def _internal_tranquilo(
 
         sample_counter = 0
         while _relative_step_length < stagnation_options.min_relative_step:
-            if stagnation_options.drop:
+            n_to_drop = stagnation_options.sample_increment
+
+            if stagnation_options.drop and len(model_xs) > n_to_drop:
                 model_xs, model_indices = drop_worst_points(
                     xs=model_xs,
                     indices=model_indices,
                     state=state,
-                    n_to_drop=stagnation_options.sample_increment,
+                    n_to_drop=n_to_drop,
                 )
-
-            (
-                n_new_points,
-                list_of_n_evals_per_point,
-            ) = get_batch_consistent_number_of_eval_points(
-                n_new_points=stagnation_options.sample_increment,
-                n_evals_per_point=n_evals_per_point,
-                batch_size=batch_size,
-            )
 
             new_xs = sample_points(
                 trustregion=state.trustregion,
-                n_points=n_new_points,
+                n_points=n_to_drop,
                 existing_xs=model_xs,
                 rng=sampling_rng,
             )
 
             new_indices = history.add_xs(new_xs)
 
-            eval_info = {
-                i: list_of_n_evals_per_point[k] for k, i in enumerate(new_indices)
-            }
+            eval_info = {i: n_evals_per_point for i in new_indices}
 
             evaluate_criterion(eval_info)
 
@@ -292,12 +279,13 @@ def _internal_tranquilo(
         acceptance_result = accept_candidate(
             subproblem_solution=sub_sol,
             state=state,
+            wrapped_criterion=evaluate_criterion,
+            noise_variance=scalar_noise_variance,
             history=history,
+            search_radius_factor=search_radius_factor,
             batch_size=batch_size,
             sample_points=sample_points,
             rng=sampling_rng,
-            wrapped_criterion=evaluate_criterion,
-            noise_variance=scalar_noise_variance,
         )
 
         # ==============================================================================
@@ -319,15 +307,12 @@ def _internal_tranquilo(
         # update state for beginning of next iteration
         # ==============================================================================
 
-        if state.suggestive_radius is not None:
-            new_radius = state.suggestive_radius
-        else:
-            new_radius = adjust_radius(
-                radius=state.trustregion.radius,
-                rho=acceptance_result.rho,
-                step_length=acceptance_result.step_length,
-                options=radius_options,
-            )
+        new_radius = adjust_radius(
+            radius=state.trustregion.radius,
+            rho=acceptance_result.rho,
+            step_length=acceptance_result.step_length,
+            options=radius_options,
+        )
 
         new_trustregion = state.trustregion._replace(
             center=acceptance_result.x, radius=new_radius
@@ -444,9 +429,6 @@ class State(NamedTuple):
     relative_step_length: float = None
     """The step_length divided by the radius of the trustregion."""
 
-    suggestive_radius: float = None
-    """Radius suggested by acceptance decider if rho cannot be sensibly computed."""
-
 
 def _is_converged(states, options):
     old, new = states[-2:]
@@ -503,7 +485,7 @@ def _concatenate_indices(first, second):
     return np.hstack((first, second))
 
 
-def get_batch_consistent_number_of_eval_points(
+def get_batch_consistent_number_of_evals_per_point(
     n_new_points, n_evals_per_point, batch_size
 ):
     """Consolidate new points and function evaluations with batch size.
@@ -518,13 +500,60 @@ def get_batch_consistent_number_of_eval_points(
         batch_size: Number of function evaluations per batch.
 
     Returns:
-        - int: Number of new x points to be sampled.
         - list: Number of function evaluations for each x point.
 
     """
     n_evals_total = n_new_points * n_evals_per_point
 
-    n_evals_batch_consistent = _ceil_to_multiple(n_evals_total, multiple=batch_size)
+    n_evals_batch_consistent = ceil_to_multiple(n_evals_total, multiple=batch_size)
+
+    # ==================================================================================
+    # Update number of new points to be sampled if evaluations are not allocated
+    # ==================================================================================
+    n_missing = n_evals_batch_consistent - n_evals_total
+
+    if n_missing >= n_evals_per_point:
+        _n_new_points = n_new_points + n_missing // n_evals_per_point
+    else:
+        _n_new_points = n_new_points
+
+    # ==================================================================================
+    # Update number of evaluations per point if evaluations are not allocated
+    # ==================================================================================
+    n_missing = n_evals_batch_consistent - _n_new_points * n_evals_per_point
+
+    _n_evals_per_point = np.full(_n_new_points, fill_value=n_evals_per_point)
+
+    if n_missing > 0:
+        # try to distribute remaining evaluations to all points
+        add_to_all_points = (n_missing - 1) // _n_new_points
+        _n_evals_per_point += add_to_all_points
+
+        # distribute leftover evaluations to first few points
+        leftover = n_missing - add_to_all_points * _n_new_points
+        _n_evals_per_point[:leftover] += 1
+
+    return _n_evals_per_point.tolist()
+
+
+def get_batch_consistent_number_of_eval_points(
+    n_new_points, n_evals_per_point, batch_size
+):
+    """Consolidate new points and function evaluations with batch size.
+    We add new points until the total number of function evaluations is close to a
+    multiple of batch_size. We then add number of missing function evaluations to the
+    evaluations per point until the total number is a multiple of batch_size.
+    Args:
+        n_new_points (int): Number of new x points to be sampled.
+        n_evals_per_point (int): Number of function evaluations per x point.
+        batch_size: Number of function evaluations per batch.
+    Returns:
+        - int: Number of new x points to be sampled.
+        - list: Number of function evaluations for each x point.
+    """
+    n_evals_total = n_new_points * n_evals_per_point
+
+    n_evals_batch_consistent = ceil_to_multiple(n_evals_total, multiple=batch_size)
 
     # ==================================================================================
     # Update number of new points to be sampled if evaluations are not allocated
