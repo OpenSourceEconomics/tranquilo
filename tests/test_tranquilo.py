@@ -6,7 +6,7 @@ from estimagic.optimization.optimize import minimize
 from tranquilo.tranquilo import (
     tranquilo,
     tranquilo_ls,
-    get_batch_consistent_number_of_eval_points,
+    get_batch_consistent_number_of_evals_per_point,
 )
 from numpy.testing import assert_array_almost_equal as aaae
 
@@ -257,7 +257,7 @@ TEST_CASES = [
 def test_get_batch_consistent_number_of_eval_points(
     n_new_points, n_evals_per_point, batch_size, expected
 ):
-    _n_new_points, _n_evals_per_point = get_batch_consistent_number_of_eval_points(
+    _n_new_points, _n_evals_per_point = get_batch_consistent_number_of_evals_per_point(
         n_new_points=n_new_points,
         n_evals_per_point=n_evals_per_point,
         batch_size=batch_size,
