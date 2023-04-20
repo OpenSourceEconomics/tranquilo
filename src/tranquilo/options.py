@@ -190,10 +190,12 @@ class NoiseAdaptationOptions(NamedTuple):
     rho_noise_n_draws: int = 100
     high_rho: float = 0.6
     low_rho: float = 0.1
-    majority_share: float = 0.8
     ignore_corelation: bool = True
+    min_share_high_rho: float = 0.7
+    min_share_low_rho: float = 0.9
     min_n_evals: int = 1
     max_n_evals: int = 30
+    good_rho_threshold: float = 0.1
 
 
 def update_option_bundle(default_options, user_options=None):
