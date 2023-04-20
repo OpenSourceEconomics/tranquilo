@@ -241,13 +241,13 @@ def test_tranquilo_with_binding_bounds(algorithm):
 
 TEST_CASES = [
     # (n_new_points, n_evals_per_point, batch_size, expected)
-    (1, 1, 1, (1, [1])),
-    (2, 3, 1, (2, [3, 3])),
-    (2, 1, 2, (2, [1, 1])),
-    (2, 1, 3, (2, [2, 1])),
-    (2, 1, 4, (4, [1, 1, 1, 1])),
-    (2, 2, 4, (2, [2, 2])),
-    (2, 3, 4, (2, [4, 4])),
+    (1, 1, 1, [1]),
+    (2, 3, 1, [3, 3]),
+    (2, 1, 2, [1, 1]),
+    (2, 1, 3, [1, 1, 1]),
+    (2, 1, 4, [1, 1, 1, 1]),
+    (2, 2, 4, [2, 2]),
+    (2, 3, 4, [4, 4]),
 ]
 
 
@@ -257,11 +257,10 @@ TEST_CASES = [
 def test_get_batch_consistent_number_of_eval_points(
     n_new_points, n_evals_per_point, batch_size, expected
 ):
-    _n_new_points, _n_evals_per_point = get_batch_consistent_number_of_evals_per_point(
+    _n_evals_per_point = get_batch_consistent_number_of_evals_per_point(
         n_new_points=n_new_points,
         n_evals_per_point=n_evals_per_point,
         batch_size=batch_size,
     )
 
-    assert _n_new_points == expected[0]
-    assert _n_evals_per_point == expected[1]
+    assert _n_evals_per_point == expected
