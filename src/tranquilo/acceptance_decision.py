@@ -98,6 +98,7 @@ def accept_classic_line_search(
     sample_points,
     search_radius_factor,
     rng,
+    draw_speculative_sample,
 ):
     # =================================================================================
     # Add candidate to history
@@ -113,13 +114,34 @@ def accept_classic_line_search(
     # speculative sample.
 
     candidate_on_border = _is_on_border(state.trustregion, x=candidate_x, rtol=1e-1)
-
+ 
     if candidate_on_border:
-        alpha_grid = 2 ** np.arange(1, batch_size)
+        
+        n_line_search_evals = min(batch_size, 4)
+
+        alpha_grid = 2 ** np.arange(1, n_line_search_evals, dtype=float)
+
         new_xs = _sample_on_line(
             start_point=state.x, direction_point=candidate_x, alpha_grid=alpha_grid
         )
-    else:
+        
+        n_missing = batch_size - n_line_search_evals
+        
+        if n_missing > 0:
+
+            additional_xs = _generate_speculative_sample(
+                new_center=candidate_x,
+                search_radius_factor=search_radius_factor,
+                trustregion=state.trustregion,
+                sample_points=sample_points,
+                n_points=n_missing,
+                history=history,
+                rng=rng,
+            )
+            
+            new_xs = np.vstack([new_xs, additional_xs])
+
+    elif draw_speculative_sample:
         new_xs = _generate_speculative_sample(
             new_center=candidate_x,
             search_radius_factor=search_radius_factor,
@@ -129,14 +151,15 @@ def accept_classic_line_search(
             history=history,
             rng=rng,
         )
-
+ 
     # ==================================================================================
     # Add new points to history and evaluate criterion
 
-    new_indices = history.add_xs(new_xs)
+    if candidate_on_border or draw_speculative_sample:
+        new_indices = history.add_xs(new_xs)
 
-    for idx in new_indices:
-        eval_info[idx] = 1
+        for idx in new_indices:
+            eval_info[idx] = 1
 
     wrapped_criterion(eval_info)
 
@@ -156,12 +179,12 @@ def accept_classic_line_search(
     # If we perform a line search, check if there are any better points
 
     if candidate_on_border:
+
         new_fvals = history.get_fvals(new_indices)
         new_fvals = pd.Series({i: np.mean(fvals) for i, fvals in new_fvals.items()})
         new_fval_argmin = new_fvals.idxmin()
 
         found_better_candidate = new_fvals.loc[new_fval_argmin] < candidate_fval
-        found_better_candidate = False
 
         # If a better point was found, update the candidates
         if found_better_candidate:
@@ -175,7 +198,7 @@ def accept_classic_line_search(
     # ==================================================================================
     # Return results
 
-    out = _get_acceptance_result(
+    res = _get_acceptance_result(
         candidate_x=candidate_x,
         candidate_fval=candidate_fval,
         candidate_index=candidate_index,
@@ -183,7 +206,7 @@ def accept_classic_line_search(
         is_accepted=is_accepted,
         old_state=state,
     )
-    return out
+    return res
 
 
 def _accept_simple(

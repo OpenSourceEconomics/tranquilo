@@ -86,6 +86,8 @@ def process_arguments(
     variance_estimator_options=None,
     infinity_handler="relative",
     residualize=None,
+    # experimental
+    draw_speculative_sample=False,
 ):
     # process convergence options
     conv_options = ConvOptions(
@@ -208,6 +210,7 @@ def process_arguments(
         "aggregate_model": aggregate_model,
         "estimate_variance": estimate_variance,
         "accept_candidate": accept_candidate,
+        "draw_speculative_sample": draw_speculative_sample,
     }
 
     return out

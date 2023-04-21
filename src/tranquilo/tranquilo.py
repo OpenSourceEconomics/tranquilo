@@ -47,6 +47,8 @@ def _internal_tranquilo(
     aggregate_model,
     estimate_variance,
     accept_candidate,
+    # experimental
+    draw_speculative_sample,
 ):
     if n_evals_at_start > 1:
         eval_info = {0: ceil_to_multiple(n_evals_at_start, multiple=batch_size)}
@@ -177,7 +179,7 @@ def _internal_tranquilo(
                     x_indices=model_indices,
                     average=True,
                 )
-
+                
                 vector_model = fit_model(
                     x=model_xs,
                     y=model_fvecs,
@@ -284,6 +286,7 @@ def _internal_tranquilo(
             batch_size=batch_size,
             sample_points=sample_points,
             rng=sampling_rng,
+            draw_speculative_sample=draw_speculative_sample,
         )
 
         # ==============================================================================
