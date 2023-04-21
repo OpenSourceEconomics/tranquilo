@@ -56,7 +56,7 @@ def simulate_rho_noise(
     true_scalar_model = model_aggregator(vector_model=vector_model)
 
     true_current_fval = true_scalar_model.predict(
-        trustregion.map_to_unit(np.zeros(n_params))
+        trustregion.map_to_unit(trustregion.center)
     )
 
     if ignore_corelation:
