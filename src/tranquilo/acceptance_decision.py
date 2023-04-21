@@ -98,7 +98,6 @@ def accept_classic_line_search(
     sample_points,
     search_radius_factor,
     rng,
-    draw_speculative_sample,
 ):
     # =================================================================================
     # Add candidate to history
@@ -113,58 +112,52 @@ def accept_classic_line_search(
     # trustregion, in which case we perform a line search, or otherwise we draw a
     # speculative sample.
 
-    candidate_on_border = _is_on_border(state.trustregion, x=candidate_x, rtol=1e-1)
- 
-    if candidate_on_border:
-        
-        n_line_search_evals = min(batch_size, 4)
+    perform_line_search = _is_on_border(state.trustregion, x=candidate_x, rtol=1e-1)
 
-        alpha_grid = 2 ** np.arange(1, n_line_search_evals, dtype=float)
+    if perform_line_search:
+        alpha_grid = _generate_alpha_grid(batch_size)
 
-        new_xs = _sample_on_line(
+        line_search_xs = _sample_on_line(
             start_point=state.x, direction_point=candidate_x, alpha_grid=alpha_grid
         )
-        
-        n_missing = batch_size - n_line_search_evals
-        
-        if n_missing > 0:
 
-            additional_xs = _generate_speculative_sample(
-                new_center=candidate_x,
-                search_radius_factor=search_radius_factor,
-                trustregion=state.trustregion,
-                sample_points=sample_points,
-                n_points=n_missing,
-                history=history,
-                rng=rng,
-            )
-            
-            new_xs = np.vstack([new_xs, additional_xs])
+    else:
+        line_search_xs = None
 
-    elif draw_speculative_sample:
-        new_xs = _generate_speculative_sample(
+    n_evals_line_search = 0 if line_search_xs is None else len(line_search_xs)
+    n_unallocated_evals = batch_size - 1 - n_evals_line_search
+
+    if n_unallocated_evals > 0:
+        speculative_xs = _generate_speculative_sample(
             new_center=candidate_x,
             search_radius_factor=search_radius_factor,
             trustregion=state.trustregion,
             sample_points=sample_points,
-            n_points=batch_size - 1,
+            n_points=n_unallocated_evals,
             history=history,
             rng=rng,
         )
- 
+
+        if line_search_xs is not None:
+            new_xs = np.vstack([line_search_xs, speculative_xs])
+        else:
+            new_xs = speculative_xs
+
+    else:
+        new_xs = line_search_xs
+
     # ==================================================================================
     # Add new points to history and evaluate criterion
 
-    if candidate_on_border or draw_speculative_sample:
-        new_indices = history.add_xs(new_xs)
+    new_indices = history.add_xs(new_xs)
 
-        for idx in new_indices:
-            eval_info[idx] = 1
+    for idx in new_indices:
+        eval_info[idx] = 1
 
     wrapped_criterion(eval_info)
 
     # ==================================================================================
-    # Calculate rho and acceptance decision
+    # Calculate rho
 
     candidate_fval = np.mean(history.get_fvals(candidate_index))
 
@@ -176,24 +169,26 @@ def accept_classic_line_search(
     )
 
     # ==================================================================================
-    # If we perform a line search, check if there are any better points
+    # Check if there are any better points
 
-    if candidate_on_border:
+    new_fvals = history.get_fvals(new_indices)
+    new_fvals = pd.Series({i: np.mean(fvals) for i, fvals in new_fvals.items()})
+    new_fval_argmin = new_fvals.idxmin()
 
-        new_fvals = history.get_fvals(new_indices)
-        new_fvals = pd.Series({i: np.mean(fvals) for i, fvals in new_fvals.items()})
-        new_fval_argmin = new_fvals.idxmin()
+    found_better_candidate = new_fvals.loc[new_fval_argmin] < candidate_fval
 
-        found_better_candidate = new_fvals.loc[new_fval_argmin] < candidate_fval
+    # If a better point was found, update the candidates
+    if found_better_candidate:
+        candidate_x = history.get_xs(new_fval_argmin)
+        candidate_fval = new_fvals.loc[new_fval_argmin]
+        candidate_index = new_fval_argmin
 
-        # If a better point was found, update the candidates
-        if found_better_candidate:
-            candidate_x = history.get_xs(new_fval_argmin)
-            candidate_fval = new_fvals.loc[new_fval_argmin]
-            candidate_index = new_fval_argmin
+    # ==================================================================================
+    # Calculate the overall improvement using a potentially updated candidate and draw
+    # the acceptance conclusions based on that.
 
-    actual_improvement = -(candidate_fval - state.fval)
-    is_accepted = actual_improvement >= min_improvement
+    overall_improvement = -(candidate_fval - state.fval)
+    is_accepted = overall_improvement >= min_improvement
 
     # ==================================================================================
     # Return results
@@ -458,3 +453,8 @@ def _is_on_cube_border(trustregion, x, rtol):
     is_on_lower_border = np.isclose(x, cube_bounds.lower, rtol=rtol).any()
     is_on_upper_border = np.isclose(x, cube_bounds.upper, rtol=rtol).any()
     return is_on_lower_border or is_on_upper_border
+
+
+def _generate_alpha_grid(batch_size):
+    n_points = min(batch_size, 4) - 1
+    return 2 ** np.arange(1, n_points + 1, dtype=float)

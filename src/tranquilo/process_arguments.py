@@ -13,7 +13,6 @@ from tranquilo.fit_models import get_fitter
 from tranquilo.history import History
 from tranquilo.options import (
     ConvOptions,
-    StagnationOptions,
     StopOptions,
     get_default_acceptance_decider,
     get_default_aggregator,
@@ -25,6 +24,7 @@ from tranquilo.options import (
     get_default_radius_options,
     get_default_sample_size,
     get_default_search_radius_factor,
+    get_default_stagnation_options,
     update_option_bundle,
 )
 from tranquilo.region import Region
@@ -86,8 +86,6 @@ def process_arguments(
     variance_estimator_options=None,
     infinity_handler="relative",
     residualize=None,
-    # experimental
-    draw_speculative_sample=False,
 ):
     # process convergence options
     conv_options = ConvOptions(
@@ -112,7 +110,6 @@ def process_arguments(
     x = _process_x(x)
     noisy = _process_noisy(noisy)
     n_cores = _process_n_cores(n_cores)
-    stagnation_options = update_option_bundle(StagnationOptions(), stagnation_options)
     n_evals_per_point = int(n_evals_per_point)
     sampling_rng = _process_seed(seed)
     n_evals_at_start = _process_n_evals_at_start(n_evals_at_start, noisy)
@@ -125,6 +122,7 @@ def process_arguments(
     acceptance_decider = _process_acceptance_decider(acceptance_decider, noisy)
 
     # process options that depend on arguments with dependent defaults
+    stagnation_options = get_default_stagnation_options(batch_size)
     target_sample_size = _process_sample_size(
         sample_size=sample_size,
         model_type=model_type,
@@ -210,7 +208,6 @@ def process_arguments(
         "aggregate_model": aggregate_model,
         "estimate_variance": estimate_variance,
         "accept_candidate": accept_candidate,
-        "draw_speculative_sample": draw_speculative_sample,
     }
 
     return out

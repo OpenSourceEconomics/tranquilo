@@ -6,6 +6,7 @@ from tranquilo.acceptance_decision import (
     _accept_simple,
     _get_acceptance_result,
     calculate_rho,
+    _generate_alpha_grid,
 )
 from tranquilo.history import History
 from tranquilo.region import Region
@@ -138,3 +139,19 @@ CASES = [
 def test_calculate_rho(actual_improvement, expected_improvement, expected):
     rho = calculate_rho(actual_improvement, expected_improvement)
     assert rho == expected
+
+
+# ======================================================================================
+# Test _generate_alpha_grid
+# ======================================================================================
+
+CASES = zip(
+    [1, 2, 4, 6],
+    [np.array([]), np.array([2]), np.array([2, 4, 8]), np.array([2, 4, 8])],
+)
+
+
+@pytest.mark.parametrize("batch_size, expected", CASES)
+def test_generate_alpha_grid(batch_size, expected):
+    alpha_grid = _generate_alpha_grid(batch_size)
+    assert_array_equal(alpha_grid, expected)

@@ -4,6 +4,14 @@ from tranquilo.models import n_free_params
 import numpy as np
 
 
+def get_default_stagnation_options(batch_size):
+    if batch_size > 1:
+        out = StagnationOptions(min_relative_step_keep=0.0, drop=True)
+    else:
+        out = StagnationOptions()
+    return out
+
+
 def get_default_radius_options(x):
     return RadiusOptions(initial_radius=0.1 * np.max(np.abs(x)))
 

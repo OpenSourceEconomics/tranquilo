@@ -47,8 +47,6 @@ def _internal_tranquilo(
     aggregate_model,
     estimate_variance,
     accept_candidate,
-    # experimental
-    draw_speculative_sample,
 ):
     if n_evals_at_start > 1:
         eval_info = {0: ceil_to_multiple(n_evals_at_start, multiple=batch_size)}
@@ -179,7 +177,7 @@ def _internal_tranquilo(
                     x_indices=model_indices,
                     average=True,
                 )
-                
+
                 vector_model = fit_model(
                     x=model_xs,
                     y=model_fvecs,
@@ -286,7 +284,6 @@ def _internal_tranquilo(
             batch_size=batch_size,
             sample_points=sample_points,
             rng=sampling_rng,
-            draw_speculative_sample=draw_speculative_sample,
         )
 
         # ==============================================================================
@@ -484,54 +481,3 @@ def _concatenate_indices(first, second):
     first = np.atleast_1d(first).astype(int)
     second = np.atleast_1d(second).astype(int)
     return np.hstack((first, second))
-
-
-def get_batch_consistent_number_of_evals_per_point(
-    n_new_points, n_evals_per_point, batch_size
-):
-    """Consolidate new points and function evaluations with batch size.
-
-    We add new points until the total number of function evaluations is close to a
-    multiple of batch_size. We then add number of missing function evaluations to the
-    evaluations per point until the total number is a multiple of batch_size.
-
-    Args:
-        n_new_points (int): Number of new x points to be sampled.
-        n_evals_per_point (int): Number of function evaluations per x point.
-        batch_size: Number of function evaluations per batch.
-
-    Returns:
-        - list: Number of function evaluations for each x point.
-
-    """
-    n_evals_total = n_new_points * n_evals_per_point
-
-    n_evals_batch_consistent = ceil_to_multiple(n_evals_total, multiple=batch_size)
-
-    # ==================================================================================
-    # Update number of new points to be sampled if evaluations are not allocated
-    # ==================================================================================
-    n_missing = n_evals_batch_consistent - n_evals_total
-
-    if n_missing >= n_evals_per_point:
-        _n_new_points = n_new_points + n_missing // n_evals_per_point
-    else:
-        _n_new_points = n_new_points
-
-    # ==================================================================================
-    # Update number of evaluations per point if evaluations are not allocated
-    # ==================================================================================
-    n_missing = n_evals_batch_consistent - _n_new_points * n_evals_per_point
-
-    _n_evals_per_point = np.full(_n_new_points, fill_value=n_evals_per_point)
-
-    if n_missing > 0:
-        # try to distribute remaining evaluations to all points
-        add_to_all_points = (n_missing - 1) // _n_new_points
-        _n_evals_per_point += add_to_all_points
-
-        # distribute leftover evaluations to first few points
-        leftover = n_missing - add_to_all_points * _n_new_points
-        _n_evals_per_point[:leftover] += 1
-
-    return _n_evals_per_point.tolist()
