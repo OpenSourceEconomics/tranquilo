@@ -176,7 +176,7 @@ def test_external_tranquilo_ls_sphere_defaults():
 # ======================================================================================
 
 
-@pytest.mark.parametrize("algo", ["tranquilo", "tranquilo_ls"])
+@pytest.mark.parametrize("algo", [tranquilo, tranquilo_ls])
 def test_tranquilo_with_noise_handling_and_deterministic_function(algo):
     def _f(x):
         return {"root_contributions": x, "value": x @ x}
@@ -184,8 +184,8 @@ def test_tranquilo_with_noise_handling_and_deterministic_function(algo):
     res = minimize(
         criterion=_f,
         params=np.arange(5),
+        algorithm=algo,
         algo_options={"noisy": True},
-        algorithm=tranquilo,
     )
 
     aaae(res.params, np.zeros(5), decimal=3)

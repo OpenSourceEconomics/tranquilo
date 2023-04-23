@@ -4,6 +4,25 @@ from tranquilo.models import n_free_params
 import numpy as np
 
 
+def get_default_stagnation_options(noisy, batch_size):
+    if noisy:
+        out = StagnationOptions(
+            min_relative_step_keep=0.0,
+            drop=False,
+        )
+    elif batch_size > 1:
+        out = StagnationOptions(
+            min_relative_step_keep=0.0,
+            drop=True,
+        )
+    else:
+        out = StagnationOptions(
+            min_relative_step_keep=0.125,
+            drop=True,
+        )
+    return out
+
+
 def get_default_radius_options(x):
     return RadiusOptions(initial_radius=0.1 * np.max(np.abs(x)))
 
@@ -77,20 +96,6 @@ def get_default_n_evals_at_start(noisy):
 
 def get_default_n_evals_per_point(noisy, noise_adaptation_options):
     return noise_adaptation_options.min_n_evals if noisy else 1
-
-
-def get_default_stagnation_options(noisy):
-    if noisy:
-        out = StagnationOptions(
-            min_relative_step_keep=0.0,
-            drop=False,
-        )
-    else:
-        out = StagnationOptions(
-            min_relative_step_keep=0.125,
-            drop=True,
-        )
-    return out
 
 
 class StopOptions(NamedTuple):

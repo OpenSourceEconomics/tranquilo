@@ -13,7 +13,7 @@ from tranquilo.models import (
     ScalarModel,
     VectorModel,
 )
-from tranquilo.process_arguments import process_arguments
+from tranquilo.process_arguments import process_arguments, next_multiple
 from tranquilo.region import Region
 from tranquilo.rho_noise import simulate_rho_noise
 from tranquilo.adjust_n_evals import adjust_n_evals
@@ -52,7 +52,10 @@ def _internal_tranquilo(
     estimate_variance,
     accept_candidate,
 ):
-    eval_info = {0: n_evals_at_start}
+    if n_evals_at_start > 1:
+        eval_info = {0: next_multiple(n_evals_at_start, base=batch_size)}
+    else:
+        eval_info = {0: 1}
 
     evaluate_criterion(eval_info)
 
@@ -125,9 +128,13 @@ def _internal_tranquilo(
         # ==========================================================================
         # sample points if necessary and do simple iteration
         # ==========================================================================
+
+        n_new_points = max(0, target_sample_size - len(model_xs))
+        n_new_points = next_multiple(n_new_points, base=batch_size)
+
         new_xs = sample_points(
             trustregion=state.trustregion,
-            n_points=max(0, target_sample_size - len(model_xs)),
+            n_points=n_new_points,
             existing_xs=model_xs,
             rng=sampling_rng,
         )
@@ -211,17 +218,19 @@ def _internal_tranquilo(
 
         sample_counter = 0
         while _relative_step_length < stagnation_options.min_relative_step:
-            if stagnation_options.drop:
+            n_to_drop = stagnation_options.sample_increment
+
+            if stagnation_options.drop and len(model_xs) > n_to_drop:
                 model_xs, model_indices = drop_worst_points(
                     xs=model_xs,
                     indices=model_indices,
                     state=state,
-                    n_to_drop=stagnation_options.sample_increment,
+                    n_to_drop=n_to_drop,
                 )
 
             new_xs = sample_points(
                 trustregion=state.trustregion,
-                n_points=stagnation_options.sample_increment,
+                n_points=n_to_drop,
                 existing_xs=model_xs,
                 rng=sampling_rng,
             )
@@ -291,6 +300,10 @@ def _internal_tranquilo(
             wrapped_criterion=evaluate_criterion,
             noise_variance=noise_variance,
             history=history,
+            search_radius_factor=search_radius_factor,
+            batch_size=batch_size,
+            sample_points=sample_points,
+            rng=sampling_rng,
         )
 
         # ==============================================================================

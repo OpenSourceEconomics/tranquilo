@@ -13,7 +13,6 @@ from tranquilo.fit_models import get_fitter
 from tranquilo.history import History
 from tranquilo.options import (
     ConvOptions,
-    get_default_stagnation_options,
     StopOptions,
     get_default_acceptance_decider,
     get_default_aggregator,
@@ -26,6 +25,7 @@ from tranquilo.options import (
     get_default_radius_options,
     get_default_sample_size,
     get_default_search_radius_factor,
+    get_default_stagnation_options,
     update_option_bundle,
     NoiseAdaptationOptions,
 )
@@ -113,10 +113,6 @@ def process_arguments(
     x = _process_x(x)
     noisy = _process_noisy(noisy)
     n_cores = _process_n_cores(n_cores)
-    stagnation_options = update_option_bundle(
-        get_default_stagnation_options(noisy),
-        stagnation_options,
-    )
     sampling_rng = _process_seed(seed)
     simulation_rng = _process_seed(seed + 1000)
 
@@ -142,6 +138,9 @@ def process_arguments(
     acceptance_decider = _process_acceptance_decider(acceptance_decider, noisy)
 
     # process options that depend on arguments with dependent defaults
+    stagnation_options = update_option_bundle(
+        get_default_stagnation_options(noisy, batch_size=batch_size), stagnation_options
+    )
     target_sample_size = _process_sample_size(
         sample_size=sample_size,
         model_type=model_type,
@@ -330,6 +329,10 @@ def _process_n_evals_at_start(n_evals, noisy):
         raise ValueError("n_initial_acceptance_evals must be non-negative.")
 
     return out
+
+
+def next_multiple(n, base):
+    return int(np.ceil(n / base) * base)
 
 
 def _process_n_evals_per_point(n_evals, noisy, noise_adaptation_options):

@@ -2,13 +2,21 @@ from collections import namedtuple
 
 import numpy as np
 import pytest
+from tranquilo.sample_points import get_sampler
 from tranquilo.acceptance_decision import (
     _accept_simple,
     _get_acceptance_result,
     calculate_rho,
+    _generate_alpha_grid,
+    _is_on_border,
+    _is_on_cube_border,
+    _is_on_sphere_border,
+    _sample_on_line,
+    _generate_speculative_sample,
 )
 from tranquilo.history import History
 from tranquilo.region import Region
+from tranquilo.bounds import Bounds
 from tranquilo.solve_subproblem import SubproblemResult
 from numpy.testing import assert_array_equal
 
@@ -31,7 +39,7 @@ def subproblem_solution():
 
 
 # ======================================================================================
-# Test accept_xxx
+# Test accept_simple
 # ======================================================================================
 
 
@@ -140,3 +148,118 @@ CASES = [
 def test_calculate_rho(actual_improvement, expected_improvement, expected):
     rho = calculate_rho(actual_improvement, expected_improvement)
     assert rho == expected
+
+
+# ======================================================================================
+# Test _generate_alpha_grid
+# ======================================================================================
+
+CASES = zip(
+    [1, 2, 4, 6],
+    [np.array([]), np.array([2]), np.array([2, 4, 8]), np.array([2, 4, 8])],
+)
+
+
+@pytest.mark.parametrize("batch_size, expected", CASES)
+def test_generate_alpha_grid(batch_size, expected):
+    alpha_grid = _generate_alpha_grid(batch_size)
+    assert_array_equal(alpha_grid, expected)
+
+
+# ======================================================================================
+# Test generating speculative sample
+# ======================================================================================
+
+
+def test_generate_speculative_sample():
+    trustregion = Region(center=np.zeros(2), radius=1.0)
+
+    history = namedtuple("History", "get_x_indices_in_region, get_xs")
+
+    history.get_x_indices_in_region = lambda _: None
+    history.get_xs = lambda _: np.atleast_2d(np.ones(2))
+
+    got = _generate_speculative_sample(
+        new_center=np.ones(2),
+        trustregion=trustregion,
+        sample_points=get_sampler("random_hull"),
+        n_points=3,
+        history=history,
+        search_radius_factor=1.0,
+        rng=np.random.default_rng(1234),
+    )
+
+    assert len(got) == 3
+    for point in got:
+        assert _is_on_sphere_border(
+            trustregion._replace(center=np.ones(2)), point, rtol=0
+        )
+
+
+# ======================================================================================
+# Test sampling on line
+# ======================================================================================
+
+
+def test_sample_on_line():
+    start_point = np.zeros(2)
+    direction_point = np.array([1, 2])
+    alpha_grid = np.array([0, 1, 2, 3.5])
+    got = _sample_on_line(start_point, direction_point, alpha_grid)
+    exp = np.array([[0, 0], [1, 2], [2, 4], [3.5, 7]])
+    assert_array_equal(got, exp)
+
+
+def test_sample_on_line_no_points():
+    start_point = np.zeros(2)
+    direction_point = np.array([1, 2])
+    alpha_grid = np.array([])
+    got = _sample_on_line(start_point, direction_point, alpha_grid)
+    exp = np.array([]).reshape(0, 2)
+    assert_array_equal(got, exp)
+
+
+# ======================================================================================
+# Test border check functions
+# ======================================================================================
+
+CASES = [
+    (np.array([0, 0]), 1, True),
+    (np.array([0, 0]), 0.5, False),
+    (np.array([0, 1]), 0.0, True),
+    (np.array([0, 0.9]), 0.1, True),
+    (np.array([0, 0.9]), 0.09, False),
+]
+
+
+@pytest.mark.parametrize("x, rtol, expected", CASES)
+def test_is_on_sphere_border(x, rtol, expected):
+    region = Region(center=np.zeros(2), radius=1.0)
+    assert _is_on_sphere_border(region, x, rtol) == expected
+
+
+CASES = [
+    (np.ones(2), 0, True),
+    (0.9 * np.ones(2), 0.1, True),
+    (0.8 * np.ones(2), 0.1, False),
+]
+
+
+@pytest.mark.parametrize("x, rtol, expected", CASES)
+def test_is_on_cube_border(x, rtol, expected):
+    bounds = Bounds(lower=-np.ones(2), upper=np.ones(2))
+    region = Region(center=np.zeros(2), radius=2.0, bounds=bounds)
+    assert _is_on_cube_border(region, x, rtol) == expected
+
+
+def test_is_on_border_sphere():
+    region = Region(center=np.zeros(2), radius=1.0)
+    assert _is_on_border(region, np.array([0, 0.9]), 0.1)
+    assert not _is_on_border(region, np.array([0, 0.9]), 0.09)
+
+
+def test_is_on_border_cube():
+    bounds = Bounds(lower=-np.ones(2), upper=np.ones(2))
+    region = Region(center=np.zeros(2), radius=2.0, bounds=bounds)
+    assert _is_on_border(region, 0.9 * np.ones(2), 0.1)
+    assert not _is_on_border(region, 0.8 * np.ones(2), 0.1)

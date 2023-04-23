@@ -15,7 +15,7 @@ from tranquilo.process_arguments import (
     _process_acceptance_decider,
     _process_model_fitter,
     _process_residualize,
-    _process_n_evals_at_start,
+    next_multiple,
 )
 
 
@@ -126,12 +126,9 @@ def test_process_residualize_invalid():
         _process_residualize(residualize="invalid", model_fitter=None)
 
 
-def test_process_n_evals_at_start():
-    assert _process_n_evals_at_start(n_evals=None, noisy=True) == 5
-    assert _process_n_evals_at_start(n_evals=None, noisy=False) == 1
-    assert _process_n_evals_at_start(n_evals=10, noisy=None) == 10
-
-
-def test_process_n_evals_at_start_negative():
-    with pytest.raises(ValueError, match="n_initial_acceptance_evals must be"):
-        _process_n_evals_at_start(n_evals=-1, noisy=None)
+def test_roundup_to_next_multiple_of_batch_size():
+    assert next_multiple(1, 1) == 1
+    assert next_multiple(456, 456) == 456
+    assert next_multiple(123123, 1) == 123123
+    assert next_multiple(1, 123123) == 123123
+    assert next_multiple(4, 10) == 10
