@@ -7,9 +7,13 @@ from tranquilo.acceptance_decision import (
     _get_acceptance_result,
     calculate_rho,
     _generate_alpha_grid,
+    _is_on_border,
+    _is_on_cube_border,
+    _is_on_sphere_border,
 )
 from tranquilo.history import History
 from tranquilo.region import Region
+from tranquilo.bounds import Bounds
 from tranquilo.solve_subproblem import SubproblemResult
 from numpy.testing import assert_array_equal
 
@@ -155,3 +159,49 @@ CASES = zip(
 def test_generate_alpha_grid(batch_size, expected):
     alpha_grid = _generate_alpha_grid(batch_size)
     assert_array_equal(alpha_grid, expected)
+
+
+# ======================================================================================
+# Test border check functions
+# ======================================================================================
+
+CASES = [
+    (np.array([0, 0]), 1, True),
+    (np.array([0, 0]), 0.5, False),
+    (np.array([0, 1]), 0.0, True),
+    (np.array([0, 0.9]), 0.1, True),
+    (np.array([0, 0.9]), 0.09, False),
+]
+
+
+@pytest.mark.parametrize("x, rtol, expected", CASES)
+def test_is_on_sphere_border(x, rtol, expected):
+    region = Region(center=np.zeros(2), radius=1.0)
+    assert _is_on_sphere_border(region, x, rtol) == expected
+
+
+CASES = [
+    (np.ones(2), 0, True),
+    (0.9 * np.ones(2), 0.1, True),
+    (0.8 * np.ones(2), 0.1, False),
+]
+
+
+@pytest.mark.parametrize("x, rtol, expected", CASES)
+def test_is_on_cube_border(x, rtol, expected):
+    bounds = Bounds(lower=-np.ones(2), upper=np.ones(2))
+    region = Region(center=np.zeros(2), radius=2.0, bounds=bounds)
+    assert _is_on_cube_border(region, x, rtol) == expected
+
+
+def test_is_on_border_sphere():
+    region = Region(center=np.zeros(2), radius=1.0)
+    assert _is_on_border(region, np.array([0, 0.9]), 0.1)
+    assert not _is_on_border(region, np.array([0, 0.9]), 0.09)
+
+
+def test_is_on_border_cube():
+    bounds = Bounds(lower=-np.ones(2), upper=np.ones(2))
+    region = Region(center=np.zeros(2), radius=2.0, bounds=bounds)
+    assert _is_on_border(region, 0.9 * np.ones(2), 0.1)
+    assert not _is_on_border(region, 0.8 * np.ones(2), 0.1)

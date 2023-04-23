@@ -99,7 +99,19 @@ def accept_classic_line_search(
     search_radius_factor,
     rng,
 ):
-    # =================================================================================
+    # ==================================================================================
+    # Quick return if batch_size is 1
+
+    if batch_size == 1:
+        return _accept_classic(
+            subproblem_solution=subproblem_solution,
+            state=state,
+            history=history,
+            wrapped_criterion=wrapped_criterion,
+            min_improvement=min_improvement,
+        )
+
+    # ==================================================================================
     # Add candidate to history
 
     candidate_x = subproblem_solution.x
@@ -107,10 +119,9 @@ def accept_classic_line_search(
 
     eval_info = {candidate_index: 1}
 
-    # =================================================================================
+    # ==================================================================================
     # Determine whether the candidate it sufficiently close to the border of the
-    # trustregion, in which case we perform a line search, or otherwise we draw a
-    # speculative sample.
+    # trustregion, in which case we perform a line search
 
     perform_line_search = _is_on_border(state.trustregion, x=candidate_x, rtol=1e-1)
 
@@ -120,9 +131,12 @@ def accept_classic_line_search(
         line_search_xs = _sample_on_line(
             start_point=state.x, direction_point=candidate_x, alpha_grid=alpha_grid
         )
-
     else:
         line_search_xs = None
+
+    # ==================================================================================
+    # Check whether there are any unallocated evaluations left, and if yes perform a
+    # speculative sampling
 
     n_evals_line_search = 0 if line_search_xs is None else len(line_search_xs)
     n_unallocated_evals = batch_size - 1 - n_evals_line_search
@@ -137,14 +151,18 @@ def accept_classic_line_search(
             history=history,
             rng=rng,
         )
-
-        if line_search_xs is not None:
-            new_xs = np.vstack([line_search_xs, speculative_xs])
-        else:
-            new_xs = speculative_xs
-
     else:
+        speculative_xs = None
+
+    # ==================================================================================
+    # Consolidate newly sampled points
+
+    if line_search_xs is not None and speculative_xs is not None:
+        new_xs = np.vstack([line_search_xs, speculative_xs])
+    elif line_search_xs is not None:
         new_xs = line_search_xs
+    elif speculative_xs is not None:
+        new_xs = speculative_xs
 
     # ==================================================================================
     # Add new points to history and evaluate criterion
