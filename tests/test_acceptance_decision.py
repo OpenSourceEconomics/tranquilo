@@ -2,6 +2,7 @@ from collections import namedtuple
 
 import numpy as np
 import pytest
+from tranquilo.sample_points import get_sampler
 from tranquilo.acceptance_decision import (
     _accept_simple,
     _get_acceptance_result,
@@ -10,6 +11,8 @@ from tranquilo.acceptance_decision import (
     _is_on_border,
     _is_on_cube_border,
     _is_on_sphere_border,
+    _sample_on_line,
+    _generate_speculative_sample,
 )
 from tranquilo.history import History
 from tranquilo.region import Region
@@ -36,7 +39,7 @@ def subproblem_solution():
 
 
 # ======================================================================================
-# Test accept_xxx
+# Test accept_simple
 # ======================================================================================
 
 
@@ -159,6 +162,59 @@ CASES = zip(
 def test_generate_alpha_grid(batch_size, expected):
     alpha_grid = _generate_alpha_grid(batch_size)
     assert_array_equal(alpha_grid, expected)
+
+
+# ======================================================================================
+# Test generating speculative sample
+# ======================================================================================
+
+
+def test_generate_speculative_sample():
+    trustregion = Region(center=np.zeros(2), radius=1.0)
+
+    history = namedtuple("History", "get_x_indices_in_region, get_xs")
+
+    history.get_x_indices_in_region = lambda _: None
+    history.get_xs = lambda _: np.atleast_2d(np.ones(2))
+
+    got = _generate_speculative_sample(
+        new_center=np.ones(2),
+        trustregion=trustregion,
+        sample_points=get_sampler("random_hull"),
+        n_points=3,
+        history=history,
+        search_radius_factor=1.0,
+        rng=np.random.default_rng(1234),
+    )
+
+    assert len(got) == 3
+    for point in got:
+        assert _is_on_sphere_border(
+            trustregion._replace(center=np.ones(2)), point, rtol=0
+        )
+
+
+# ======================================================================================
+# Test sampling on line
+# ======================================================================================
+
+
+def test_sample_on_line():
+    start_point = np.zeros(2)
+    direction_point = np.array([1, 2])
+    alpha_grid = np.array([0, 1, 2, 3.5])
+    got = _sample_on_line(start_point, direction_point, alpha_grid)
+    exp = np.array([[0, 0], [1, 2], [2, 4], [3.5, 7]])
+    assert_array_equal(got, exp)
+
+
+def test_sample_on_line_no_points():
+    start_point = np.zeros(2)
+    direction_point = np.array([1, 2])
+    alpha_grid = np.array([])
+    got = _sample_on_line(start_point, direction_point, alpha_grid)
+    exp = np.array([]).reshape(0, 2)
+    assert_array_equal(got, exp)
 
 
 # ======================================================================================

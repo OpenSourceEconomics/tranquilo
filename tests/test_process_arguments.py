@@ -15,7 +15,7 @@ from tranquilo.process_arguments import (
     _process_acceptance_decider,
     _process_model_fitter,
     _process_residualize,
-    ceil_to_multiple,
+    next_multiple,
 )
 
 
@@ -127,8 +127,8 @@ def test_process_residualize_invalid():
 
 
 def test_roundup_to_next_multiple_of_batch_size():
-    assert ceil_to_multiple(1, 1) == 1
-    assert ceil_to_multiple(456, 456) == 456
-    assert ceil_to_multiple(123123, 1) == 123123
-    assert ceil_to_multiple(1, 123123) == 123123
-    assert ceil_to_multiple(4, 10) == 10
+    assert next_multiple(1, 1) == 1
+    assert next_multiple(456, 456) == 456
+    assert next_multiple(123123, 1) == 123123
+    assert next_multiple(1, 123123) == 123123
+    assert next_multiple(4, 10) == 10

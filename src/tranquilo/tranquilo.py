@@ -13,7 +13,7 @@ from tranquilo.models import (
     ScalarModel,
     VectorModel,
 )
-from tranquilo.process_arguments import process_arguments, ceil_to_multiple
+from tranquilo.process_arguments import process_arguments, next_multiple
 from tranquilo.region import Region
 
 
@@ -49,7 +49,7 @@ def _internal_tranquilo(
     accept_candidate,
 ):
     if n_evals_at_start > 1:
-        eval_info = {0: ceil_to_multiple(n_evals_at_start, multiple=batch_size)}
+        eval_info = {0: next_multiple(n_evals_at_start, base=batch_size)}
     else:
         eval_info = {0: 1}
 
@@ -115,7 +115,7 @@ def _internal_tranquilo(
         # ==========================================================================
 
         n_new_points = max(0, target_sample_size - len(model_xs))
-        n_new_points = ceil_to_multiple(n_new_points, multiple=batch_size)
+        n_new_points = next_multiple(n_new_points, base=batch_size)
 
         new_xs = sample_points(
             trustregion=state.trustregion,
@@ -133,14 +133,13 @@ def _internal_tranquilo(
         model_indices = _concatenate_indices(model_indices, new_indices)
 
         model_xs = history.get_xs(model_indices)
-        model_xs, model_fvecs = history.get_model_data(
+        model_data = history.get_model_data(
             x_indices=model_indices,
             average=True,
         )
 
         vector_model = fit_model(
-            x=model_xs,
-            y=model_fvecs,
+            *model_data,
             region=state.trustregion,
             old_model=state.vector_model,
             weights=None,
@@ -173,14 +172,13 @@ def _internal_tranquilo(
                     n_to_drop=1,
                 )
 
-                model_xs, model_fvecs = history.get_model_data(
+                model_data = history.get_model_data(
                     x_indices=model_indices,
                     average=True,
                 )
 
                 vector_model = fit_model(
-                    x=model_xs,
-                    y=model_fvecs,
+                    *model_data,
                     region=state.trustregion,
                     old_model=state.vector_model,
                     weights=None,

@@ -311,5 +311,5 @@ def _process_n_evals_at_start(n_evals, noisy):
     return out
 
 
-def ceil_to_multiple(n, multiple):
-    return int(np.ceil(n / multiple) * multiple)
+def next_multiple(n, base):
+    return int(np.ceil(n / base) * base)
