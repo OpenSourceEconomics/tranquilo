@@ -173,6 +173,11 @@ class History:
         )
         return out
 
+    def get_n_evals(self, x_indices):
+        fvals = self.get_fvals(x_indices)
+        n_evals = {k: len(v) for k, v in fvals.items()}
+        return n_evals
+
     def get_model_data(self, x_indices, average=True):
         if np.isscalar(x_indices):
             x_indices = [x_indices]

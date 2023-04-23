@@ -15,6 +15,8 @@ from tranquilo.models import (
 )
 from tranquilo.process_arguments import process_arguments, next_multiple
 from tranquilo.region import Region
+from tranquilo.rho_noise import simulate_rho_noise
+from tranquilo.adjust_n_evals import adjust_n_evals
 
 
 # wrapping gives us the signature and docstring of process arguments
@@ -31,6 +33,7 @@ def _internal_tranquilo(
     conv_options,
     stop_options,
     radius_options,
+    noise_adaptation_options,
     batch_size,
     target_sample_size,
     stagnation_options,
@@ -39,6 +42,7 @@ def _internal_tranquilo(
     n_evals_at_start,
     trustregion,
     sampling_rng,
+    simulation_rng,
     history,
     sample_points,
     solve_subproblem,
@@ -108,6 +112,17 @@ def _internal_tranquilo(
             indices=old_indices,
             state=state,
             target_size=target_sample_size,
+            history=history,
+            n_evals_per_point=n_evals_per_point,
+        )
+        # ==============================================================================
+        # determine number of evaluations needed at existing xs
+        # ==============================================================================
+
+        additional_eval_info = _get_additional_eval_info(
+            model_indices=model_indices,
+            history=history,
+            n_evals_per_point=n_evals_per_point,
         )
 
         # ==========================================================================
@@ -127,6 +142,7 @@ def _internal_tranquilo(
         new_indices = history.add_xs(new_xs)
 
         eval_info = {i: n_evals_per_point for i in new_indices}
+        eval_info.update(additional_eval_info)
 
         evaluate_criterion(eval_info)
 
@@ -256,17 +272,23 @@ def _internal_tranquilo(
                 break
 
         # ==============================================================================
-        # fit noise model based on previous acceptance samples
+        # fit noise models
         # ==============================================================================
 
         if noisy:
-            scalar_noise_variance = estimate_variance(
+            noise_variance = estimate_variance(
                 trustregion=state.trustregion,
                 history=history,
                 model_type="scalar",
             )
+            noise_cov = estimate_variance(
+                trustregion=state.trustregion,
+                history=history,
+                model_type="vector",
+            )
         else:
-            scalar_noise_variance = None
+            noise_variance = None
+            noise_cov = None
 
         # ==============================================================================
         # acceptance decision
@@ -276,7 +298,7 @@ def _internal_tranquilo(
             subproblem_solution=sub_sol,
             state=state,
             wrapped_criterion=evaluate_criterion,
-            noise_variance=scalar_noise_variance,
+            noise_variance=noise_variance,
             history=history,
             search_radius_factor=search_radius_factor,
             batch_size=batch_size,
@@ -295,12 +317,39 @@ def _internal_tranquilo(
             old_indices_used=np.intersect1d(model_indices, old_indices),
             old_indices_discarded=np.setdiff1d(old_indices, model_indices),
             **acceptance_result._asdict(),
+            n_evals_per_point=n_evals_per_point,
         )
 
         states.append(state)
 
         # ==============================================================================
-        # update state for beginning of next iteration
+        # estimate rho noise and adjust n_evals_per_point
+        # ==============================================================================
+
+        if noisy:
+            rho_noise_vec = simulate_rho_noise(
+                xs=model_xs,
+                vector_model=vector_model,
+                old_vector_model=state.vector_model,
+                trustregion=state.trustregion,
+                noise_cov=noise_cov,
+                model_fitter=fit_model,
+                model_aggregator=aggregate_model,
+                subsolver=solve_subproblem,
+                rng=simulation_rng,
+                options=noise_adaptation_options,
+            )
+
+            n_evals_per_point, n_evals_is_increased = adjust_n_evals(
+                n_evals=n_evals_per_point,
+                rho=acceptance_result.rho,
+                rho_noise=rho_noise_vec,
+                options=noise_adaptation_options,
+            )
+        else:
+            n_evals_is_increased = False
+        # ==============================================================================
+        # update trust region radius
         # ==============================================================================
 
         new_radius = adjust_radius(
@@ -308,8 +357,12 @@ def _internal_tranquilo(
             rho=acceptance_result.rho,
             step_length=acceptance_result.step_length,
             options=radius_options,
+            n_evals_is_increased=n_evals_is_increased,
         )
 
+        # ==============================================================================
+        # update state for beginning of next iteration
+        # ==============================================================================
         new_trustregion = state.trustregion._replace(
             center=acceptance_result.x, radius=new_radius
         )
@@ -425,6 +478,10 @@ class State(NamedTuple):
     relative_step_length: float = None
     """The step_length divided by the radius of the trustregion."""
 
+    n_evals_per_point: int = None
+
+    n_evals_acceptance: int = None
+
 
 def _is_converged(states, options):
     old, new = states[-2:]
@@ -479,3 +536,24 @@ def _concatenate_indices(first, second):
     first = np.atleast_1d(first).astype(int)
     second = np.atleast_1d(second).astype(int)
     return np.hstack((first, second))
+
+
+def _get_additional_eval_info(model_indices, history, n_evals_per_point):
+    """Determine the evaluations needed at existing xs.
+
+    We need additional evaluations at existing xs if `n_evals_per_point` has increased
+    since we last evaluated the criterion function at those xs.
+
+    Args:
+        model_indices (np.ndarray): The indices of the points used to build the model.
+        history (History): The history object.
+        n_evals_per_point (int): The number of evaluations per point.
+
+    Returns:
+        dict: Dict that maps x_indices to the number of additional evaluations needed.
+
+    """
+    existing_n_evals = history.get_n_evals(model_indices)
+    eval_info = {k: n_evals_per_point - v for k, v in existing_n_evals.items()}
+    eval_info = {k: v for k, v in eval_info.items() if v > 0}
+    return eval_info

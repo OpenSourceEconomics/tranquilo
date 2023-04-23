@@ -15,6 +15,7 @@ def test_increase(options):
         rho=1.5,
         step_length=np.linalg.norm(np.ones(2)),
         options=options,
+        n_evals_is_increased=False,
     )
 
     expected = 2
@@ -28,6 +29,7 @@ def test_increase_blocked_by_small_step(options):
         rho=1.5,
         step_length=np.linalg.norm(np.array([0.1, 0.1])),
         options=options,
+        n_evals_is_increased=False,
     )
 
     expected = 1
@@ -41,6 +43,7 @@ def test_decrease(options):
         rho=0.05,
         step_length=np.linalg.norm(np.ones(2)),
         options=options,
+        n_evals_is_increased=False,
     )
 
     expected = 0.5
@@ -54,6 +57,7 @@ def test_max_radius_is_not_violated(options):
         rho=1.5,
         step_length=np.linalg.norm(np.array([750_000])),
         options=options,
+        n_evals_is_increased=False,
     )
 
     expected = 1e6
@@ -67,6 +71,7 @@ def test_min_radius_is_not_violated(options):
         rho=0.05,
         step_length=np.linalg.norm(np.ones(2)),
         options=options,
+        n_evals_is_increased=False,
     )
 
     expected = 1e-06
@@ -82,6 +87,7 @@ def test_constant_radius():
         rho=1.5,
         step_length=np.linalg.norm(np.ones(2)),
         options=options,
+        n_evals_is_increased=False,
     )
 
     expected = 1
@@ -97,6 +103,7 @@ def test_max_radius_to_step_ratio_is_not_violated():
         rho=1.5,
         step_length=np.linalg.norm(np.array([0.75])),
         options=options,
+        n_evals_is_increased=False,
     )
 
     expected = 1.5
