@@ -218,6 +218,7 @@ def accept_classic_line_search(
         rho=rho,
         is_accepted=is_accepted,
         old_state=state,
+        n_evals=1,
     )
     return res
 
