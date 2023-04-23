@@ -13,7 +13,7 @@ from tranquilo.fit_models import get_fitter
 from tranquilo.history import History
 from tranquilo.options import (
     ConvOptions,
-    StagnationOptions,
+    get_default_stagnation_options,
     StopOptions,
     get_default_acceptance_decider,
     get_default_aggregator,
@@ -22,10 +22,12 @@ from tranquilo.options import (
     get_default_residualize,
     get_default_model_type,
     get_default_n_evals_at_start,
+    get_default_n_evals_per_point,
     get_default_radius_options,
     get_default_sample_size,
     get_default_search_radius_factor,
     update_option_bundle,
+    NoiseAdaptationOptions,
 )
 from tranquilo.region import Region
 from tranquilo.sample_points import get_sampler
@@ -64,12 +66,13 @@ def process_arguments(
     sample_size=None,
     model_type=None,
     search_radius_factor=None,
-    n_evals_per_point=1,
+    n_evals_per_point=None,
     n_evals_at_start=None,
     seed=925408,
     # bundled advanced options
     radius_options=None,
     stagnation_options=None,
+    noise_adaptation_options=None,
     # component names and related options
     sampler="optimal_hull",
     sampler_options=None,
@@ -110,12 +113,25 @@ def process_arguments(
     x = _process_x(x)
     noisy = _process_noisy(noisy)
     n_cores = _process_n_cores(n_cores)
-    stagnation_options = update_option_bundle(StagnationOptions(), stagnation_options)
-    n_evals_per_point = int(n_evals_per_point)
+    stagnation_options = update_option_bundle(
+        get_default_stagnation_options(noisy),
+        stagnation_options,
+    )
     sampling_rng = _process_seed(seed)
+    simulation_rng = _process_seed(seed + 1000)
+
     n_evals_at_start = _process_n_evals_at_start(
         n_evals_at_start,
         noisy,
+    )
+    noise_adaptation_options = update_option_bundle(
+        NoiseAdaptationOptions(), noise_adaptation_options
+    )
+
+    n_evals_per_point = _process_n_evals_per_point(
+        n_evals=n_evals_per_point,
+        noisy=noisy,
+        noise_adaptation_options=noise_adaptation_options,
     )
 
     # process options that depend on arguments with static defaults
@@ -198,11 +214,13 @@ def process_arguments(
         "batch_size": batch_size,
         "target_sample_size": target_sample_size,
         "stagnation_options": stagnation_options,
+        "noise_adaptation_options": noise_adaptation_options,
         "search_radius_factor": search_radius_factor,
         "n_evals_per_point": n_evals_per_point,
         "n_evals_at_start": n_evals_at_start,
         "trustregion": trustregion,
         "sampling_rng": sampling_rng,
+        "simulation_rng": simulation_rng,
         "history": history,
         "sample_points": sample_points,
         "solve_subproblem": solve_subproblem,
@@ -310,5 +328,17 @@ def _process_n_evals_at_start(n_evals, noisy):
 
     if out < 1:
         raise ValueError("n_initial_acceptance_evals must be non-negative.")
+
+    return out
+
+
+def _process_n_evals_per_point(n_evals, noisy, noise_adaptation_options):
+    if n_evals is None:
+        out = get_default_n_evals_per_point(noisy, noise_adaptation_options)
+    else:
+        out = int(n_evals)
+
+    if out < 1:
+        raise ValueError("n_evals_per_point must be non-negative.")
 
     return out

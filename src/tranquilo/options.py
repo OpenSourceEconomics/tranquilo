@@ -75,6 +75,24 @@ def get_default_n_evals_at_start(noisy):
     return 5 if noisy else 1
 
 
+def get_default_n_evals_per_point(noisy, noise_adaptation_options):
+    return noise_adaptation_options.min_n_evals if noisy else 1
+
+
+def get_default_stagnation_options(noisy):
+    if noisy:
+        out = StagnationOptions(
+            min_relative_step_keep=0.0,
+            drop=False,
+        )
+    else:
+        out = StagnationOptions(
+            min_relative_step_keep=0.125,
+            drop=True,
+        )
+    return out
+
+
 class StopOptions(NamedTuple):
     """Criteria for stopping without successful convergence."""
 
@@ -111,20 +129,20 @@ class RadiusOptions(NamedTuple):
 
 
 class AcceptanceOptions(NamedTuple):
-    confidence_level: float = 0.8
-    power_level: float = 0.8
+    confidence_level: float = 0.95
+    power_level: float = 0.95
     n_initial: int = 5
-    n_min: int = 5
-    n_max: int = 100
+    n_min: int = 4
+    n_max: int = 50
     min_improvement: float = 0.0
 
 
 class StagnationOptions(NamedTuple):
-    min_relative_step_keep: float = 0.125
+    min_relative_step_keep: float
+    drop: bool
     min_relative_step: float = 0.05
     sample_increment: int = 1
     max_trials: int = 1
-    drop: bool = True
 
 
 class SubsolverOptions(NamedTuple):
@@ -166,6 +184,18 @@ class SamplerOptions(NamedTuple):
     criterion: str = None
     n_points_randomsearch: int = 1
     return_info: bool = False
+
+
+class NoiseAdaptationOptions(NamedTuple):
+    rho_noise_n_draws: int = 100
+    high_rho: float = 0.6
+    low_rho: float = 0.1
+    ignore_corelation: bool = True
+    min_share_high_rho: float = 0.7
+    min_share_low_rho: float = 0.9
+    min_n_evals: int = 1
+    max_n_evals: int = 30
+    good_rho_threshold: float = 0.1
 
 
 def update_option_bundle(default_options, user_options=None):

@@ -7,6 +7,7 @@ from tranquilo.bounds import Bounds
 from tranquilo.rho_noise import simulate_rho_noise
 from tranquilo.solve_subproblem import get_subsolver
 from numpy.testing import assert_array_almost_equal as aaae
+from tranquilo.options import NoiseAdaptationOptions
 
 
 @pytest.mark.parametrize("functype", ["scalar", "least_squares"])
@@ -62,17 +63,19 @@ def test_convergence_to_one_if_noise_is_tiny(functype):
 
     rng = np.random.default_rng(123)
 
+    options = NoiseAdaptationOptions(rho_noise_n_draws=100, ignore_corelation=True)
+
     got = simulate_rho_noise(
         xs=xs,
         vector_model=vector_model,
+        old_vector_model=None,
         trustregion=trustregion,
         noise_cov=noise_cov,
         model_fitter=model_fitter,
         model_aggregator=model_aggregator,
         subsolver=subsolver,
         rng=rng,
-        n_draws=100,
-        ignore_corelation=True,
+        options=options,
     )
 
     aaae(got, np.ones_like(got), decimal=4)
