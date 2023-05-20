@@ -1,9 +1,5 @@
 import numpy as np
 
-from estimagic.optimization.algo_options import (
-    CONVERGENCE_RELATIVE_CRITERION_TOLERANCE,
-    CONVERGENCE_RELATIVE_GRADIENT_TOLERANCE,
-)
 from tranquilo.acceptance_decision import get_acceptance_decider
 from tranquilo.aggregate_models import get_aggregator
 from tranquilo.bounds import Bounds
@@ -51,8 +47,8 @@ def process_arguments(
     convergence_absolute_criterion_tolerance=0.0,
     convergence_absolute_gradient_tolerance=0.0,
     convergence_absolute_params_tolerance=0.0,
-    convergence_relative_criterion_tolerance=CONVERGENCE_RELATIVE_CRITERION_TOLERANCE,
-    convergence_relative_gradient_tolerance=CONVERGENCE_RELATIVE_GRADIENT_TOLERANCE,
+    convergence_relative_criterion_tolerance=2e-9,
+    convergence_relative_gradient_tolerance=1e-8,
     convergence_relative_params_tolerance=1e-8,
     convergence_min_trust_region_radius=0.0,
     # stopping options
