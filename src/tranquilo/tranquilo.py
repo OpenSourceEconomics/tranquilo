@@ -1,10 +1,8 @@
 import functools
-from functools import partial
 from typing import NamedTuple
 
 import numpy as np
 
-from estimagic.decorators import mark_minimizer
 from tranquilo.adjust_radius import adjust_radius
 from tranquilo.filter_points import (
     drop_worst_points,
@@ -511,25 +509,6 @@ def _is_converged(states, options):
         msg = None
 
     return converged, msg
-
-
-tranquilo = mark_minimizer(
-    func=partial(_tranquilo, functype="scalar"),
-    name="tranquilo",
-    primary_criterion_entry="value",
-    needs_scaling=True,
-    is_available=True,
-    is_global=False,
-)
-
-tranquilo_ls = mark_minimizer(
-    func=partial(_tranquilo, functype="least_squares"),
-    primary_criterion_entry="root_contributions",
-    name="tranquilo_ls",
-    needs_scaling=True,
-    is_available=True,
-    is_global=False,
-)
 
 
 def _concatenate_indices(first, second):
