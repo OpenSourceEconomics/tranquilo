@@ -1,9 +1,5 @@
 import numpy as np
 
-from estimagic.optimization.algo_options import (
-    CONVERGENCE_RELATIVE_CRITERION_TOLERANCE,
-    CONVERGENCE_RELATIVE_GRADIENT_TOLERANCE,
-)
 from tranquilo.acceptance_decision import get_acceptance_decider
 from tranquilo.aggregate_models import get_aggregator
 from tranquilo.bounds import Bounds
@@ -33,6 +29,7 @@ from tranquilo.region import Region
 from tranquilo.sample_points import get_sampler
 from tranquilo.solve_subproblem import get_subsolver
 from tranquilo.wrap_criterion import get_wrapped_criterion
+import warnings
 
 
 def process_arguments(
@@ -51,8 +48,8 @@ def process_arguments(
     convergence_absolute_criterion_tolerance=0.0,
     convergence_absolute_gradient_tolerance=0.0,
     convergence_absolute_params_tolerance=0.0,
-    convergence_relative_criterion_tolerance=CONVERGENCE_RELATIVE_CRITERION_TOLERANCE,
-    convergence_relative_gradient_tolerance=CONVERGENCE_RELATIVE_GRADIENT_TOLERANCE,
+    convergence_relative_criterion_tolerance=2e-9,
+    convergence_relative_gradient_tolerance=1e-8,
     convergence_relative_params_tolerance=1e-8,
     convergence_min_trust_region_radius=0.0,
     # stopping options
@@ -90,6 +87,26 @@ def process_arguments(
     infinity_handler="relative",
     residualize=None,
 ):
+    # warning for things that do not work well yet
+    if noisy and functype == "scalar":
+        msg = (
+            "Noisy scalar functions are experimental and likely to give very "
+            "suboptimal results."
+        )
+        warnings.warn(msg)
+    if noisy and n_cores > 1:
+        msg = (
+            "Parallelization together with noisy functions is experimental and likely "
+            "to give very suboptimal results."
+        )
+        warnings.warn(msg)
+    if n_cores > 1 and functype == "scalar":
+        msg = (
+            "Parallelization together with scalar functions is experimental and likely "
+            "to give very suboptimal results."
+        )
+        warnings.warn(msg)
+
     # process convergence options
     conv_options = ConvOptions(
         disable=bool(disable_convergence),

@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from estimagic import first_derivative, second_derivative
+from estimagic.differentiation.derivatives import first_derivative, second_derivative
 from tranquilo.fit_models import _quadratic_features, get_fitter
 from tranquilo.region import Region
 from numpy.testing import assert_array_almost_equal, assert_array_equal

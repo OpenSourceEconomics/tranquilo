@@ -3,11 +3,31 @@ import itertools
 import numpy as np
 import pytest
 from estimagic.optimization.optimize import minimize
-from tranquilo.tranquilo import (
-    tranquilo,
-    tranquilo_ls,
-)
+from tranquilo.tranquilo import _tranquilo
 from numpy.testing import assert_array_almost_equal as aaae
+from estimagic.decorators import mark_minimizer
+from functools import partial
+
+
+tranquilo = mark_minimizer(
+    func=partial(_tranquilo, functype="scalar"),
+    name="tranquilo",
+    primary_criterion_entry="value",
+    needs_scaling=True,
+    is_available=True,
+    is_global=False,
+)
+
+
+tranquilo_ls = mark_minimizer(
+    func=partial(_tranquilo, functype="least_squares"),
+    primary_criterion_entry="root_contributions",
+    name="tranquilo_ls",
+    needs_scaling=True,
+    is_available=True,
+    is_global=False,
+)
+
 
 # ======================================================================================
 # Test tranquilo end-to-end

@@ -2,8 +2,6 @@ import functools
 
 import numpy as np
 
-from estimagic.batch_evaluators import process_batch_evaluator
-
 
 def get_wrapped_criterion(criterion, batch_evaluator, n_cores, history):
     """Wrap the criterion function to do get parallelization and history handling.
@@ -66,3 +64,24 @@ def get_wrapped_criterion(criterion, batch_evaluator, n_cores, history):
         )
 
     return wrapper_criterion
+
+
+def process_batch_evaluator(batch_evaluator="joblib"):
+    batch_evaluator = "joblib" if batch_evaluator is None else batch_evaluator
+
+    if callable(batch_evaluator):
+        out = batch_evaluator
+    elif isinstance(batch_evaluator, str):
+        if batch_evaluator == "joblib":
+            from estimagic.batch_evaluators import joblib_batch_evaluator as out
+        elif batch_evaluator == "pathos":
+            from estimagic.batch_evaluators import pathos_mp_batch_evaluator as out
+        else:
+            raise ValueError(
+                "Invalid batch evaluator requested. Currently only 'pathos' and "
+                "'joblib' are supported."
+            )
+    else:
+        raise TypeError("batch_evaluator must be a callable or string.")
+
+    return out

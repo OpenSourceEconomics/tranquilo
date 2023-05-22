@@ -72,6 +72,7 @@ black = 1
 filterwarnings = [
     "ignore:delta_grad == 0.0",  # UserWarning in test_poisedness.py
     "ignore:Jupyter is migrating",  # DeprecationWarning from jupyter client
+    "ignore:Noisy scalar functions are experimental",
 ]
 markers = [
     "wip: Tests that are work-in-progress.",

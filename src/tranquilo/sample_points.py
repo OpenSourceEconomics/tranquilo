@@ -4,9 +4,10 @@ import numpy as np
 from scipy.spatial.distance import pdist
 from scipy.special import gammainc, logsumexp
 
-import estimagic as em
+from scipy.optimize import minimize, Bounds
 from tranquilo.get_component import get_component
 from tranquilo.options import SamplerOptions
+import functools
 
 
 def get_sampler(sampler, user_options=None):
@@ -241,8 +242,8 @@ def _optimal_hull_sampler(
         criterion = "determinant" if n_points == 1 else "distance"
 
     algo_options = {} if algo_options is None else algo_options
-    if "stopping_max_iterations" not in algo_options:
-        algo_options["stopping_max_iterations"] = 2 * n_params + 5
+    if "maxiter" not in algo_options:
+        algo_options["maxiter"] = 2 * n_params + 5
 
     if existing_xs is not None:
         # map existing points into unit space for easier optimization
@@ -302,15 +303,14 @@ def _optimal_hull_sampler(
     if existing_xs_unit is None and n_points == 1:
         opt_params = x0
     else:
-        res = em.maximize(
-            criterion=func_dict[criterion],
-            params=x0,
-            algorithm=algorithm,
-            lower_bounds=-np.ones_like(x0),
-            upper_bounds=np.ones_like(x0),
-            algo_options=algo_options,
+        res = minimize(
+            switch_sign(func_dict[criterion]),
+            x0,
+            method=algorithm,
+            bounds=Bounds(-np.ones_like(x0), np.ones_like(x0)),
+            options=algo_options,
         )
-        opt_params = res.params
+        opt_params = res.x
 
     # Make sure the optimal sampling is actually better than the initial one with
     # respect to the fekete criterion. This could be violated if the surrogate
@@ -464,3 +464,11 @@ def _project_onto_unit_hull(x, trustregion_shape):
     norm = np.linalg.norm(x, axis=1, ord=order).reshape(-1, 1)
     projected = x / norm
     return projected
+
+
+def switch_sign(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        return -func(*args, **kwargs)
+
+    return wrapper

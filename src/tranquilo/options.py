@@ -184,7 +184,7 @@ class FilterOptions(NamedTuple):
 class SamplerOptions(NamedTuple):
     distribution: str = None
     hardness: float = 1
-    algorithm: str = "scipy_lbfgsb"
+    algorithm: str = "L-BFGS-B"
     algo_options: dict = None
     criterion: str = None
     n_points_randomsearch: int = 1
