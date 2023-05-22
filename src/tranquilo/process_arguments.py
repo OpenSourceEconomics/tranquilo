@@ -29,6 +29,7 @@ from tranquilo.region import Region
 from tranquilo.sample_points import get_sampler
 from tranquilo.solve_subproblem import get_subsolver
 from tranquilo.wrap_criterion import get_wrapped_criterion
+import warnings
 
 
 def process_arguments(
@@ -86,6 +87,26 @@ def process_arguments(
     infinity_handler="relative",
     residualize=None,
 ):
+    # warning for things that do not work well yet
+    if noisy and functype == "scalar":
+        msg = (
+            "Noisy scalar functions are experimental and likely to give very "
+            "suboptimal results."
+        )
+        warnings.warn(msg)
+    if noisy and n_cores > 1:
+        msg = (
+            "Parallelization together with noisy functions is experimental and likely "
+            "to give very suboptimal results."
+        )
+        warnings.warn(msg)
+    if n_cores > 1 and functype == "scalar":
+        msg = (
+            "Parallelization together with scalar functions is experimental and likely "
+            "to give very suboptimal results."
+        )
+        warnings.warn(msg)
+
     # process convergence options
     conv_options = ConvOptions(
         disable=bool(disable_convergence),
