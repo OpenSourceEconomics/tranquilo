@@ -15,7 +15,8 @@ def simulate_rho_noise(
     rng,
     options,
 ):
-    """Simulate a rho that would obtain on average if there is no approximation error.
+    """Simulate a rho that we would obtain on average if there is no approximation
+    error.
 
     This can be used to adjust the sample size in the presence of noise.
 

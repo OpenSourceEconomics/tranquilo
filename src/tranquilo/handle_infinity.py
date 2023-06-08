@@ -33,7 +33,7 @@ def clip_relative(fvecs):
 
     # Due to the initial value of the masked min and max, the sign of the diff can
     # be negative if all values are infinite. In that case we want to switch the
-    # signe of _diff, _mins and _maxs.
+    # sign of _diff, _mins and _maxs.
     _signs = np.sign(_diff)
     _diff *= _signs
     _maxs *= _signs
