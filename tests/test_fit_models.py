@@ -94,14 +94,14 @@ def test_fit_against_truth_quadratic(fitter, quadratic_case):
 @pytest.mark.parametrize("model", ["ols", "ridge", "tranquilo"])
 def test_fit_ols_against_gradient(model, quadratic_case):
     options = {"l2_penalty_square": 0}
-    fit_ols = get_fitter(
+    fitter = get_fitter(
         model,
         options,
         model_type="quadratic",
         residualize=False,
         infinity_handling="relative",
     )
-    got = fit_ols(
+    got = fitter(
         quadratic_case["x"],
         quadratic_case["y"],
         region=Region(center=np.zeros(4), radius=1.0),
