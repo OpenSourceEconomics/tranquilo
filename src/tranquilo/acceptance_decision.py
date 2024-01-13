@@ -209,17 +209,29 @@ def accept_classic_line_search(
     is_accepted = overall_improvement >= min_improvement
 
     # ==================================================================================
-    # Return results
+    # Process and return results
 
-    res = _get_acceptance_result(
-        candidate_x=candidate_x,
-        candidate_fval=candidate_fval,
-        candidate_index=candidate_index,
-        rho=rho,
-        is_accepted=is_accepted,
-        old_state=state,
-        n_evals=1,
-    )
+    if np.isfinite(candidate_fval):
+        res = _get_acceptance_result(
+            candidate_x=candidate_x,
+            candidate_fval=candidate_fval,
+            candidate_index=candidate_index,
+            rho=rho,
+            is_accepted=is_accepted,
+            old_state=state,
+            n_evals=1,
+        )
+    else:
+        res = _get_acceptance_result(
+            candidate_x=state.x,
+            candidate_fval=state.fval,
+            candidate_index=state.index,
+            rho=-np.inf,
+            is_accepted=False,
+            old_state=state,
+            n_evals=1,
+        )
+
     return res
 
 
@@ -262,15 +274,26 @@ def _accept_simple(
 
     is_accepted = actual_improvement >= min_improvement
 
-    res = _get_acceptance_result(
-        candidate_x=candidate_x,
-        candidate_fval=candidate_fval,
-        candidate_index=candidate_index,
-        rho=rho,
-        is_accepted=is_accepted,
-        old_state=state,
-        n_evals=n_evals,
-    )
+    if not np.isfinite(candidate_fval):
+        res = _get_acceptance_result(
+            candidate_x=candidate_x,
+            candidate_fval=candidate_fval,
+            candidate_index=candidate_index,
+            rho=rho,
+            is_accepted=is_accepted,
+            old_state=state,
+            n_evals=n_evals,
+        )
+    else:
+        res = _get_acceptance_result(
+            candidate_x=state.x,
+            candidate_fval=state.fval,
+            candidate_index=state.index,
+            rho=-np.inf,
+            is_accepted=False,
+            old_state=state,
+            n_evals=n_evals,
+        )
 
     return res
 
@@ -321,15 +344,26 @@ def accept_noisy(
 
     is_accepted = actual_improvement >= min_improvement
 
-    res = _get_acceptance_result(
-        candidate_x=candidate_x,
-        candidate_fval=candidate_fval,
-        candidate_index=candidate_index,
-        rho=rho,
-        is_accepted=is_accepted,
-        old_state=state,
-        n_evals=n_2,
-    )
+    if np.isfinite(candidate_fval):
+        res = _get_acceptance_result(
+            candidate_x=candidate_x,
+            candidate_fval=candidate_fval,
+            candidate_index=candidate_index,
+            rho=rho,
+            is_accepted=is_accepted,
+            old_state=state,
+            n_evals=n_2,
+        )
+    else:
+        res = _get_acceptance_result(
+            candidate_x=state.x,
+            candidate_fval=state.fval,
+            candidate_index=state.index,
+            rho=-np.inf,
+            is_accepted=False,
+            old_state=state,
+            n_evals=n_2,
+        )
 
     return res
 
