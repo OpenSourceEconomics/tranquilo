@@ -19,6 +19,7 @@ from tranquilo.subsolvers.wrapped_subsolvers import (
     solve_multistart,
 )
 from tranquilo.options import SubsolverOptions
+from tranquilo.robustify_subproblem_solution import robustify_subproblem_sphere_solver
 
 
 def get_subsolver(sphere_solver, cube_solver, user_options=None):
@@ -87,6 +88,7 @@ def get_subsolver(sphere_solver, cube_solver, user_options=None):
         user_options=user_options,
         mandatory_signature=["model", "x_candidate"],
     )
+    _robust_sphere_solver = robustify_subproblem_sphere_solver(_sphere_subsolver)
 
     _cube_subsolver = get_component(
         name_or_func=cube_solver,
@@ -99,7 +101,7 @@ def get_subsolver(sphere_solver, cube_solver, user_options=None):
 
     solver = partial(
         _solve_subproblem_template,
-        sphere_solver=_sphere_subsolver,
+        sphere_solver=_robust_sphere_solver,
         cube_solver=_cube_subsolver,
     )
 
