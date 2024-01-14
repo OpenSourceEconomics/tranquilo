@@ -1,9 +1,42 @@
-from functools import partial
+from functools import partial, wraps
 
 import numpy as np
 from scipy.optimize import Bounds, NonlinearConstraint, minimize
 
 from tranquilo.exploration_sample import draw_exploration_sample
+
+
+def add_fallback_to_subproblem_solver(solver, fallback):
+    fallback_options = {
+        "slsqp_sphere": slsqp_sphere,
+        "lbfgsb_sphere": lbfgsb_sphere,
+    }
+
+    if fallback not in fallback_options:
+        raise ValueError(
+            f"Unknown fallback solver: {fallback}. Must be in {list(fallback_options)}"
+        )
+
+    fallback_solver = fallback_options[fallback]
+
+    @wraps(solver)
+    def wrapped_solver(model, x_candidate, lower_bounds, upper_bounds, **kwargs):
+        try:
+            result = solver(
+                model=model,
+                x_candidate=x_candidate,
+                lower_bounds=lower_bounds,
+                upper_bounds=upper_bounds,
+                **kwargs,
+            )
+        except Exception:
+            result = fallback_solver(
+                model=model,
+                x_candidate=x_candidate,
+            )
+        return result
+
+    return wrapped_solver
 
 
 def solve_multistart(model, x_candidate, lower_bounds, upper_bounds):
@@ -45,6 +78,44 @@ def solve_multistart(model, x_candidate, lower_bounds, upper_bounds):
     }
 
 
+def lbfgsb_sphere(model, x_candidate):
+    crit, grad = get_crit_and_grad(model)
+
+    # Run an unconstrained solver in the unit cube
+    # ==================================================================================
+    lower_bounds = -np.ones(len(x_candidate))
+    upper_bounds = np.ones(len(x_candidate))
+
+    res = minimize(
+        crit,
+        x_candidate,
+        method="L-BFGS-B",
+        jac=grad,
+        bounds=Bounds(lower_bounds, upper_bounds),
+        options={
+            "maxiter": len(x_candidate),
+        },
+    )
+
+    # Project the solution onto the unit sphere if necessary
+    # ==================================================================================
+    solution_lies_inside_sphere = np.linalg.norm(res.x) <= 1
+
+    if solution_lies_inside_sphere:
+        _minimizer = res.x
+        _criterion = res.fun
+    else:
+        _minimizer = _project_onto_unit_sphere(res.x)
+        _criterion = crit(_minimizer)
+
+    return {
+        "x": _minimizer,
+        "criterion": _criterion,
+        "n_iterations": res.n_iterations,
+        "success": True,
+    }
+
+
 def slsqp_sphere(model, x_candidate):
     crit, grad = get_crit_and_grad(model)
     constraints = get_constraints()
@@ -52,13 +123,15 @@ def slsqp_sphere(model, x_candidate):
     res = minimize(
         crit,
         x_candidate,
-        method="slsqp",
+        method="SLSQP",
         jac=grad,
         constraints=constraints,
+        options={"maxiter": len(x_candidate)},
     )
 
     return {
         "x": res.x,
+        "criterion": res.fun,
         "success": res.success,
         "n_iterations": res.nit,
     }
@@ -92,3 +165,7 @@ def get_constraints():
     )
 
     return (constr,)
+
+
+def _project_onto_unit_sphere(x):
+    return x / np.linalg.norm(x)

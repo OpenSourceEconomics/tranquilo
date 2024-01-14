@@ -274,7 +274,7 @@ def _accept_simple(
 
     is_accepted = actual_improvement >= min_improvement
 
-    if not np.isfinite(candidate_fval):
+    if np.isfinite(candidate_fval):
         res = _get_acceptance_result(
             candidate_x=candidate_x,
             candidate_fval=candidate_fval,
