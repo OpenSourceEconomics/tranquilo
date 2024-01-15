@@ -10,6 +10,7 @@ def add_fallback_to_subproblem_solver(solver, fallback):
     fallback_options = {
         "slsqp_sphere": slsqp_sphere,
         "lbfgsb_sphere": lbfgsb_sphere,
+        "lbfgsb_sphere_reparametrized": lbfgsb_sphere_reparametrized,
     }
 
     if fallback not in fallback_options:
@@ -78,11 +79,49 @@ def solve_multistart(model, x_candidate, lower_bounds, upper_bounds):
     }
 
 
+def lbfgsb_sphere_reparametrized(model, x_candidate):
+    def crit(x):
+        x_norm = np.linalg.norm(x)
+        if x_norm > 1:
+            x_tilde = x / x_norm
+        else:
+            x_tilde = x
+        return model.predict(x_tilde)
+
+    lower_bounds = -np.ones(len(x_candidate))
+    upper_bounds = np.ones(len(x_candidate))
+
+    res = minimize(
+        crit,
+        x_candidate,
+        method="L-BFGS-B",
+        bounds=Bounds(lower_bounds, upper_bounds),
+        options={
+            "maxiter": len(x_candidate),
+        },
+    )
+
+    solution_norm = np.linalg.norm(res.x)
+
+    if solution_norm <= 1:
+        _minimizer = res.x
+        _criterion = res.fun
+    else:
+        _minimizer = _project_onto_unit_sphere(res.x)
+        _criterion = crit(_minimizer)
+
+    return {
+        "x": _minimizer,
+        "criterion": _criterion,
+        "n_iterations": res.nit,
+        "success": True,
+    }
+
+
 def lbfgsb_sphere(model, x_candidate):
-    crit, grad = get_crit_and_grad(model)
+    crit, grad = _get_crit_and_grad(model)
 
     # Run an unconstrained solver in the unit cube
-    # ==================================================================================
     lower_bounds = -np.ones(len(x_candidate))
     upper_bounds = np.ones(len(x_candidate))
 
@@ -98,7 +137,6 @@ def lbfgsb_sphere(model, x_candidate):
     )
 
     # Project the solution onto the unit sphere if necessary
-    # ==================================================================================
     solution_lies_inside_sphere = np.linalg.norm(res.x) <= 1
 
     if solution_lies_inside_sphere:
@@ -111,14 +149,14 @@ def lbfgsb_sphere(model, x_candidate):
     return {
         "x": _minimizer,
         "criterion": _criterion,
-        "n_iterations": res.n_iterations,
+        "n_iterations": res.nit,
         "success": True,
     }
 
 
 def slsqp_sphere(model, x_candidate):
-    crit, grad = get_crit_and_grad(model)
-    constraints = get_constraints()
+    crit, grad = _get_crit_and_grad(model)
+    constraints = _get_constraints()
 
     res = minimize(
         crit,
@@ -137,7 +175,7 @@ def slsqp_sphere(model, x_candidate):
     }
 
 
-def get_crit_and_grad(model):
+def _get_crit_and_grad(model):
     def _crit(x, c, g, h):
         return c + x @ g + 0.5 * x @ h @ x
 
@@ -150,7 +188,7 @@ def get_crit_and_grad(model):
     return crit, grad
 
 
-def get_constraints():
+def _get_constraints():
     def _constr_fun(x):
         return x @ x
 

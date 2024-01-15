@@ -89,7 +89,7 @@ def get_subsolver(sphere_solver, cube_solver, user_options=None):
         mandatory_signature=["model", "x_candidate"],
     )
     _robust_sphere_solver = add_fallback_to_subproblem_solver(
-        _sphere_subsolver, fallback="lbfgsb_sphere"
+        _sphere_subsolver, fallback="lbfgsb_sphere_reparametrized"
     )
 
     _cube_subsolver = get_component(
