@@ -512,7 +512,7 @@ def _take_preliminary_gradient_descent_step_and_check_for_solution(
 
         if not converged:
             trustregion_radius = min(
-                max(min_radius, max(trustregion_radius, radius_lower_bound)), max_radius
+                max(min_radius, trustregion_radius, radius_lower_bound), max_radius
             )
 
     return (

@@ -14,14 +14,17 @@ from tranquilo.subsolvers.gqtpar import (
     gqtpar,
 )
 from tranquilo.subsolvers.gqtpar_fast import gqtpar_fast
-from tranquilo.subsolvers.wrapped_subsolvers import (
-    slsqp_sphere,
-    solve_multistart,
-)
 from tranquilo.options import SubsolverOptions
+from tranquilo.subsolvers.fallback_subsolvers import (
+    robust_cube_solver,
+    robust_sphere_solver_inscribed_cube,
+    robust_sphere_solver_norm_constraint,
+    robust_sphere_solver_reparametrized,
+    robust_cube_solver_multistart,
+)
 
 
-def get_subsolver(sphere_solver, cube_solver, user_options=None):
+def get_subsolver(sphere_solver, cube_solver, retry_with_fallback, user_options=None):
     """Get an algorithm-function with partialled options.
 
     Args:
@@ -36,6 +39,8 @@ def get_subsolver(sphere_solver, cube_solver, user_options=None):
             to be ``lower_bounds`` and ``upper_bounds``. The fourth argument needs to be
             ``x_candidate``, an initial guess for the solution in the unit space.
             Moreover, subsolvers can have any number of additional keyword arguments.
+        retry_with_fallback (bool): Whether to retry solving the subproblem with a
+            fallback solver if the optimized subsolver raises an exception.
         user_options (dict):
             Options for the subproblem solver. The following are supported:
             - maxiter (int): Maximum number of iterations to perform when solving the
@@ -70,13 +75,16 @@ def get_subsolver(sphere_solver, cube_solver, user_options=None):
     built_in_sphere_solvers = {
         "gqtpar": gqtpar,
         "gqtpar_fast": gqtpar_fast,
-        "slsqp_sphere": slsqp_sphere,
+        "fallback_reparametrized": robust_sphere_solver_reparametrized,
+        "fallback_inscribed_cube": robust_sphere_solver_inscribed_cube,
+        "fallback_norm_constraint": robust_sphere_solver_norm_constraint,
     }
 
     built_in_cube_solvers = {
         "bntr": bntr,
         "bntr_fast": bntr_fast,
-        "multistart": solve_multistart,
+        "fallback_cube": robust_cube_solver,
+        "fallback_multistart": robust_cube_solver_multistart,
     }
 
     _sphere_subsolver = get_component(
@@ -97,10 +105,29 @@ def get_subsolver(sphere_solver, cube_solver, user_options=None):
         mandatory_signature=["model", "x_candidate", "lower_bounds", "upper_bounds"],
     )
 
+    _fallback_sphere_solver = get_component(
+        name_or_func="fallback_inscribed_cube",
+        component_name="fallback_sphere_solver",
+        func_dict=built_in_sphere_solvers,
+        default_options=SubsolverOptions(),
+        mandatory_signature=["model", "x_candidate"],
+    )
+
+    _fallback_cube_solver = get_component(
+        name_or_func="fallback_cube",
+        component_name="fallback_cube_solver",
+        func_dict=built_in_cube_solvers,
+        default_options=SubsolverOptions(),
+        mandatory_signature=["model", "x_candidate"],
+    )
+
     solver = partial(
         _solve_subproblem_template,
         sphere_solver=_sphere_subsolver,
         cube_solver=_cube_subsolver,
+        fallback_sphere_solver=_fallback_sphere_solver,
+        fallback_cube_solver=_fallback_cube_solver,
+        retry_with_fallback=retry_with_fallback,
     )
 
     return solver
@@ -111,6 +138,9 @@ def _solve_subproblem_template(
     trustregion,
     sphere_solver,
     cube_solver,
+    fallback_sphere_solver,
+    fallback_cube_solver,
+    retry_with_fallback,
 ):
     """Solve the quadratic subproblem.
 
@@ -128,6 +158,8 @@ def _solve_subproblem_template(
             ``upper_bounds``. The fourth argument needs to be ``x_candidate``, an
             initial guess for the solution in the unit space. Moreover, subsolvers can
             have any number of additional keyword arguments.
+        retry_with_fallback (bool): Whether to retry solving the subproblem with a
+            fallback solver if the optimized subsolver raises an exception.
 
 
     Returns:
@@ -145,16 +177,32 @@ def _solve_subproblem_template(
     """
     old_x_unit = trustregion.map_to_unit(trustregion.center)
 
-    solver = sphere_solver if trustregion.shape == "sphere" else cube_solver
+    if trustregion.shape == "sphere":
+        solver = sphere_solver
+        fallback_solver = fallback_sphere_solver
+    else:
+        solver = cube_solver
+        fallback_solver = fallback_cube_solver
 
-    raw_result = solver(
-        model=model,
-        x_candidate=old_x_unit,
-        # bounds can be passed to both solvers because the functions returned by
-        # `get_component` ignore redundant arguments.
-        lower_bounds=-np.ones_like(old_x_unit),
-        upper_bounds=np.ones_like(old_x_unit),
-    )
+    # try finding a solution using the optimized subsolver. If this raises an
+    # exception, use a fallback solver if requested, otherwise raise the exception.
+    try:
+        raw_result = solver(
+            model=model,
+            x_candidate=old_x_unit,
+            # bounds can be passed to both solvers because the functions returned by
+            # `get_component` ignore redundant arguments.
+            lower_bounds=-np.ones_like(old_x_unit),
+            upper_bounds=np.ones_like(old_x_unit),
+        )
+    except Exception as e:
+        if not retry_with_fallback:
+            raise e
+
+        raw_result = fallback_solver(
+            model=model,
+            x_candidate=old_x_unit,
+        )
 
     if trustregion.shape == "cube":
         raw_result["x"] = np.clip(raw_result["x"], -1.0, 1.0)
