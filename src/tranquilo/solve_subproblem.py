@@ -20,7 +20,7 @@ from tranquilo.subsolvers.fallback_subsolvers import (
     robust_sphere_solver_inscribed_cube,
     robust_sphere_solver_norm_constraint,
     robust_sphere_solver_reparametrized,
-    robust_solver_multistart,
+    robust_cube_solver_multistart,
 )
 
 
@@ -83,8 +83,8 @@ def get_subsolver(sphere_solver, cube_solver, retry_with_fallback, user_options=
     built_in_cube_solvers = {
         "bntr": bntr,
         "bntr_fast": bntr_fast,
-        "fallback_multistart": robust_solver_multistart,
         "fallback_cube": robust_cube_solver,
+        "fallback_multistart": robust_cube_solver_multistart,
     }
 
     _sphere_subsolver = get_component(

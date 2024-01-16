@@ -5,7 +5,40 @@ from scipy.optimize import Bounds, NonlinearConstraint, minimize
 from tranquilo.exploration_sample import draw_exploration_sample
 
 
-def robust_solver_multistart(model, x_candidate, lower_bounds, upper_bounds):
+# ======================================================================================
+# Cube solvers
+# ======================================================================================
+def robust_cube_solver(model, x_candidate, radius=1.0):
+    """Robust cube solver.
+
+    Argument `radius` corresponds to half of the side length of the cube.
+
+    """
+    crit, grad = _get_crit_and_grad(model)
+
+    lower_bounds = -radius * np.ones(len(x_candidate))
+    upper_bounds = radius * np.ones(len(x_candidate))
+
+    res = minimize(
+        crit,
+        x_candidate,
+        method="L-BFGS-B",
+        jac=grad,
+        bounds=Bounds(lower_bounds, upper_bounds),
+        options={
+            "maxiter": len(x_candidate),
+        },
+    )
+
+    return {
+        "x": res.x,
+        "criterion": res.fun,
+        "n_iterations": res.nit,
+        "success": True,
+    }
+
+
+def robust_cube_solver_multistart(model, x_candidate, lower_bounds, upper_bounds):
     np.random.seed(12345)
     start_values = draw_exploration_sample(
         x=x_candidate,
@@ -17,31 +50,43 @@ def robust_solver_multistart(model, x_candidate, lower_bounds, upper_bounds):
         seed=1234,
     )
 
-    def crit(x):
-        return model.predict(x)
-
-    bounds = Bounds(lower_bounds, upper_bounds)
-
     best_crit = np.inf
     accepted_x = None
     critvals = []
+
     for x in start_values:
-        res = minimize(
-            crit,
-            x,
-            method="L-BFGS-B",
-            bounds=bounds,
-        )
-        if res.fun <= best_crit:
-            accepted_x = res.x
-        critvals.append(res.fun)
+        res = robust_cube_solver(model, x)
+
+        if res["criterion"] <= best_crit:
+            accepted_x = res["x"]
+            best_crit = res["criterion"]
+
+        critvals.append(res["criterion"])
 
     return {
         "x": accepted_x,
+        "criterion": best_crit,
         "std": np.std(critvals),
         "n_iterations": None,
         "success": None,
     }
+
+
+# ======================================================================================
+# Sphere solvers
+# ======================================================================================
+
+
+def robust_sphere_solver_inscribed_cube(model, x_candidate):
+    """Robust sphere solver that uses a cube solver in an inscribed cube.
+
+    We let x be in the largest cube that is inscribed inside the unit sphere. Formula
+    is taken from http://tinyurl.com/4astpuwn.
+
+    This solver cannot find solutions on the hull of the sphere.
+
+    """
+    return robust_cube_solver(model, x_candidate, radius=1 / np.sqrt(len(x_candidate)))
 
 
 def robust_sphere_solver_reparametrized(model, x_candidate):
@@ -90,44 +135,6 @@ def robust_sphere_solver_reparametrized(model, x_candidate):
     }
 
 
-def robust_cube_solver(model, x_candidate, radius=1.0):
-    """Robust cube solver."""
-    crit, grad = _get_crit_and_grad(model)
-
-    lower_bounds = -radius * np.ones(len(x_candidate))
-    upper_bounds = radius * np.ones(len(x_candidate))
-
-    res = minimize(
-        crit,
-        x_candidate,
-        method="L-BFGS-B",
-        jac=grad,
-        bounds=Bounds(lower_bounds, upper_bounds),
-        options={
-            "maxiter": len(x_candidate),
-        },
-    )
-
-    return {
-        "x": res.x,
-        "criterion": res.fun,
-        "n_iterations": res.nit,
-        "success": True,
-    }
-
-
-def robust_sphere_solver_inscribed_cube(model, x_candidate):
-    """Robust sphere solver that uses a cube solver in an inscribed cube.
-
-    We let x be in the largest cube that is inscribed inside the unit sphere. Formula
-    is taken from http://tinyurl.com/4astpuwn.
-
-    This solver cannot find solutions on the hull of the sphere.
-
-    """
-    return robust_cube_solver(model, x_candidate, radius=1 / np.sqrt(len(x_candidate)))
-
-
 def robust_sphere_solver_norm_constraint(model, x_candidate):
     """Robust sphere solver that uses ||x|| <= 1 as a nonlinear constraint.
 
@@ -152,6 +159,11 @@ def robust_sphere_solver_norm_constraint(model, x_candidate):
         "success": res.success,
         "n_iterations": res.nit,
     }
+
+
+# ======================================================================================
+# Criterion, gradient, and spherical constraint
+# ======================================================================================
 
 
 def _get_crit_and_grad(model):
