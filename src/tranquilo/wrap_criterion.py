@@ -49,13 +49,20 @@ def get_wrapped_criterion(criterion, batch_evaluator, n_cores, history):
             criterion,
             arguments=arguments,
             n_cores=effective_n_cores,
+            error_handling="continue",
         )
+
+        # The batch evaluator replaces exceptions with their traceback (str) when
+        # error_handling="continue". We replace these cases with infinity.
+        raw_evals_with_replaced_traceback = [
+            np.inf if isinstance(x, str) else x for x in raw_evals
+        ]
 
         # replace NaNs but keep infinite values. NaNs would be problematic in many
         # places, infs are only a problem in model fitting and will be handled there
         clipped_evals = [
             np.nan_to_num(critval, nan=np.inf, posinf=np.inf, neginf=-np.inf)
-            for critval in raw_evals
+            for critval in raw_evals_with_replaced_traceback
         ]
 
         history.add_evals(
