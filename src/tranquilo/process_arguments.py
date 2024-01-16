@@ -79,7 +79,7 @@ def process_arguments(
     model_fitter_options=None,
     cube_subsolver="bntr_fast",
     sphere_subsolver="gqtpar_fast",
-    retry_subproblem_with_fallback=False,
+    retry_subproblem_with_fallback=True,
     subsolver_options=None,
     acceptance_decider=None,
     acceptance_decider_options=None,
