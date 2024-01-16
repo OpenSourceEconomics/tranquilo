@@ -149,6 +149,7 @@ def accept_classic_line_search(
             sample_points=sample_points,
             n_points=n_unallocated_evals,
             history=history,
+            line_search_xs=line_search_xs,
             rng=rng,
         )
     else:
@@ -393,7 +394,14 @@ def calculate_rho(actual_improvement, expected_improvement):
 
 
 def _generate_speculative_sample(
-    new_center, trustregion, sample_points, n_points, history, search_radius_factor, rng
+    new_center,
+    trustregion,
+    sample_points,
+    n_points,
+    history,
+    line_search_xs,
+    search_radius_factor,
+    rng,
 ):
     """Generative a speculative sample.
 
@@ -419,7 +427,10 @@ def _generate_speculative_sample(
 
     old_xs = history.get_xs(old_indices)
 
-    model_xs = old_xs
+    if line_search_xs is not None:
+        model_xs = np.stack([old_xs, line_search_xs])
+    else:
+        model_xs = old_xs
 
     new_xs = sample_points(
         search_region,
