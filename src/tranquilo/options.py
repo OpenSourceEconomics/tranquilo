@@ -134,6 +134,10 @@ class RadiusOptions(NamedTuple):
 
 
 class AcceptanceOptions(NamedTuple):
+    # experimental options
+    experimental: bool
+    speculative_sample_radius_factor: float
+    # regular options
     confidence_level: float = 0.95
     power_level: float = 0.95
     n_initial: int = 5
