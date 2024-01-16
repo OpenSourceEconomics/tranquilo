@@ -1,46 +1,11 @@
-from functools import partial, wraps
-
 import numpy as np
+from functools import partial
 from scipy.optimize import Bounds, NonlinearConstraint, minimize
 
 from tranquilo.exploration_sample import draw_exploration_sample
 
 
-def add_fallback_to_subproblem_solver(solver, fallback):
-    fallback_options = {
-        "slsqp_sphere": slsqp_sphere,
-        "lbfgsb_sphere": lbfgsb_sphere,
-        "lbfgsb_sphere_reparametrized": lbfgsb_sphere_reparametrized,
-    }
-
-    if fallback not in fallback_options:
-        raise ValueError(
-            f"Unknown fallback solver: {fallback}. Must be in {list(fallback_options)}"
-        )
-
-    fallback_solver = fallback_options[fallback]
-
-    @wraps(solver)
-    def wrapped_solver(model, x_candidate, lower_bounds, upper_bounds, **kwargs):
-        try:
-            result = solver(
-                model=model,
-                x_candidate=x_candidate,
-                lower_bounds=lower_bounds,
-                upper_bounds=upper_bounds,
-                **kwargs,
-            )
-        except Exception:
-            result = fallback_solver(
-                model=model,
-                x_candidate=x_candidate,
-            )
-        return result
-
-    return wrapped_solver
-
-
-def solve_multistart(model, x_candidate, lower_bounds, upper_bounds):
+def robust_solver_multistart(model, x_candidate, lower_bounds, upper_bounds):
     np.random.seed(12345)
     start_values = draw_exploration_sample(
         x=x_candidate,
@@ -79,13 +44,22 @@ def solve_multistart(model, x_candidate, lower_bounds, upper_bounds):
     }
 
 
-def lbfgsb_sphere_reparametrized(model, x_candidate):
+def robust_sphere_solver_reparametrized(model, x_candidate):
+    """Robust sphere solver that uses reparametrization.
+
+    We let x be in the cube -1 <= x <= 1, but if the optimizer chooses a point outside
+    the sphere x is projected onto the sphere inside the criterion function.
+
+    This solver can find solutions on the hull of the sphere.
+
+    """
+
     def crit(x):
         x_norm = np.linalg.norm(x)
-        if x_norm > 1:
-            x_tilde = x / x_norm
-        else:
+        if x_norm <= 1:
             x_tilde = x
+        else:
+            x_tilde = x / x_norm
         return model.predict(x_tilde)
 
     lower_bounds = -np.ones(len(x_candidate))
@@ -105,25 +79,23 @@ def lbfgsb_sphere_reparametrized(model, x_candidate):
 
     if solution_norm <= 1:
         _minimizer = res.x
-        _criterion = res.fun
     else:
-        _minimizer = _project_onto_unit_sphere(res.x)
-        _criterion = crit(_minimizer)
+        _minimizer = res.x / solution_norm
 
     return {
         "x": _minimizer,
-        "criterion": _criterion,
+        "criterion": res.fun,
         "n_iterations": res.nit,
         "success": True,
     }
 
 
-def lbfgsb_sphere(model, x_candidate):
+def robust_cube_solver(model, x_candidate, radius=1.0):
+    """Robust cube solver."""
     crit, grad = _get_crit_and_grad(model)
 
-    # Run an unconstrained solver in the unit cube
-    lower_bounds = -np.ones(len(x_candidate))
-    upper_bounds = np.ones(len(x_candidate))
+    lower_bounds = -radius * np.ones(len(x_candidate))
+    upper_bounds = radius * np.ones(len(x_candidate))
 
     res = minimize(
         crit,
@@ -136,25 +108,32 @@ def lbfgsb_sphere(model, x_candidate):
         },
     )
 
-    # Project the solution onto the unit sphere if necessary
-    solution_lies_inside_sphere = np.linalg.norm(res.x) <= 1
-
-    if solution_lies_inside_sphere:
-        _minimizer = res.x
-        _criterion = res.fun
-    else:
-        _minimizer = _project_onto_unit_sphere(res.x)
-        _criterion = crit(_minimizer)
-
     return {
-        "x": _minimizer,
-        "criterion": _criterion,
+        "x": res.x,
+        "criterion": res.fun,
         "n_iterations": res.nit,
         "success": True,
     }
 
 
-def slsqp_sphere(model, x_candidate):
+def robust_sphere_solver_inscribed_cube(model, x_candidate):
+    """Robust sphere solver that uses a cube solver in an inscribed cube.
+
+    We let x be in the largest cube that is inscribed inside the unit sphere. Formula
+    is taken from http://tinyurl.com/4astpuwn.
+
+    This solver cannot find solutions on the hull of the sphere.
+
+    """
+    return robust_cube_solver(model, x_candidate, radius=1 / np.sqrt(len(x_candidate)))
+
+
+def robust_sphere_solver_norm_constraint(model, x_candidate):
+    """Robust sphere solver that uses ||x|| <= 1 as a nonlinear constraint.
+
+    This solver can find solutions on the hull of the sphere.
+
+    """
     crit, grad = _get_crit_and_grad(model)
     constraints = _get_constraints()
 
@@ -203,7 +182,3 @@ def _get_constraints():
     )
 
     return (constr,)
-
-
-def _project_onto_unit_sphere(x):
-    return x / np.linalg.norm(x)

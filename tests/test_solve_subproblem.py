@@ -35,7 +35,9 @@ def test_without_bounds(solver_name):
 
     trustregion = Region(center=np.zeros(3), radius=1, bounds=Bounds(None, None))
 
-    solve_subproblem = get_subsolver(sphere_solver=solver_name, cube_solver="bntr")
+    solve_subproblem = get_subsolver(
+        sphere_solver=solver_name, cube_solver="bntr", retry_with_fallback=False
+    )
 
     calculated = solve_subproblem(
         model=model,

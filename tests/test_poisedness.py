@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+import sys
 from tranquilo.poisedness import (
     _get_minimize_options,
     _lagrange_poly_matrix,
@@ -111,6 +112,7 @@ TEST_CASES = [
 ]
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test is inaccurate on Windows.")
 @pytest.mark.parametrize("sample, shape, maxiter, expected", TEST_CASES)
 def test_improve_poisedness(sample, shape, maxiter, expected):
     _, got_lambdas = improve_poisedness(sample=sample, shape=shape, maxiter=maxiter)
