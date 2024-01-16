@@ -38,12 +38,12 @@ def robust_cube_solver(model, x_candidate, radius=1.0):
     }
 
 
-def robust_cube_solver_multistart(model, x_candidate, lower_bounds, upper_bounds):
+def robust_cube_solver_multistart(model, x_candidate):
     np.random.seed(12345)
     start_values = draw_exploration_sample(
         x=x_candidate,
-        lower=lower_bounds,
-        upper=upper_bounds,
+        lower=-np.ones(len(x_candidate)),
+        upper=np.ones(len(x_candidate)),
         n_samples=100,
         sampling_distribution="uniform",
         sampling_method="sobol",
@@ -142,15 +142,19 @@ def robust_sphere_solver_norm_constraint(model, x_candidate):
 
     """
     crit, grad = _get_crit_and_grad(model)
-    constraints = _get_constraints()
+    constraint = _get_constraint()
+
+    lower_bounds = -np.ones(len(x_candidate))
+    upper_bounds = np.ones(len(x_candidate))
 
     res = minimize(
         crit,
         x_candidate,
         method="SLSQP",
+        bounds=Bounds(lower_bounds, upper_bounds),
         jac=grad,
-        constraints=constraints,
-        options={"maxiter": len(x_candidate)},
+        constraints=constraint,
+        options={"maxiter": 3 * len(x_candidate)},
     )
 
     return {
@@ -179,18 +183,17 @@ def _get_crit_and_grad(model):
     return crit, grad
 
 
-def _get_constraints():
+def _get_constraint():
     def _constr_fun(x):
         return x @ x
 
     def _constr_jac(x):
         return 2 * x
 
-    constr = NonlinearConstraint(
+    return NonlinearConstraint(
         fun=_constr_fun,
         lb=-np.inf,
         ub=1,
         jac=_constr_jac,
+        keep_feasible=True,
     )
-
-    return (constr,)
