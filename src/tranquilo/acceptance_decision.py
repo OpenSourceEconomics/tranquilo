@@ -152,7 +152,7 @@ def accept_classic_line_search(
     n_unallocated_evals = batch_size - 1 - n_evals_line_search
 
     if experimental:
-        radius_factor = search_radius_factor
+        radius_factor = speculative_sample_radius_factor
         _tmp_line_search_xs = line_search_xs
     else:
         radius_factor = search_radius_factor
@@ -629,7 +629,7 @@ def _generate_speculative_sample(
     old_xs = history.get_xs(old_indices)
 
     if line_search_xs is not None:
-        model_xs = np.stack([old_xs, line_search_xs])
+        model_xs = np.row_stack([old_xs, line_search_xs])
     else:
         model_xs = old_xs
 
