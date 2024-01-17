@@ -89,6 +89,7 @@ def process_arguments(
     residualize=None,
     # Experimental options
     experimental=None,
+    filter_target_sample_size_factor=None,
 ):
     # warning for things that do not work well yet
     if noisy and functype == "scalar":
@@ -249,6 +250,8 @@ def process_arguments(
         "aggregate_model": aggregate_model,
         "estimate_variance": estimate_variance,
         "accept_candidate": accept_candidate,
+        "filter_target_sample_size_factor": filter_target_sample_size_factor,
+        "experimental": experimental,
     }
 
     return out
