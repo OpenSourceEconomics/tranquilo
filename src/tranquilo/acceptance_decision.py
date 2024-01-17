@@ -19,8 +19,6 @@ from tranquilo.options import AcceptanceOptions
 def get_acceptance_decider(
     acceptance_decider,
     acceptance_options,
-    experimental,
-    speculative_sample_radius_factor,
 ):
     func_dict = {
         "classic": _accept_classic,
@@ -34,10 +32,7 @@ def get_acceptance_decider(
         func_dict=func_dict,
         component_name="acceptance_decider",
         user_options=acceptance_options,
-        default_options=AcceptanceOptions(
-            experimental=experimental,
-            speculative_sample_radius_factor=speculative_sample_radius_factor,
-        ),
+        default_options=AcceptanceOptions(),
     )
 
     return out
@@ -100,170 +95,11 @@ def accept_classic_line_search(
     state,
     history,
     *,
-    experimental,
     speculative_sample_radius_factor,
     wrapped_criterion,
     min_improvement,
     batch_size,
     sample_points,
-    search_radius_factor,
-    rng,
-):
-    # ==================================================================================
-    # Quick return if batch_size is 1
-
-    if batch_size == 1:
-        return _accept_classic(
-            subproblem_solution=subproblem_solution,
-            state=state,
-            history=history,
-            wrapped_criterion=wrapped_criterion,
-            min_improvement=min_improvement,
-        )
-
-    # ==================================================================================
-    # Add candidate to history
-
-    candidate_x = subproblem_solution.x
-    candidate_index = history.add_xs(candidate_x)
-
-    eval_info = {candidate_index: 1}
-
-    # ==================================================================================
-    # Determine whether the candidate it sufficiently close to the border of the
-    # trustregion, in which case we perform a line search
-
-    perform_line_search = _is_on_border(state.trustregion, x=candidate_x, rtol=1e-1)
-
-    if perform_line_search:
-        alpha_grid = _generate_alpha_grid(batch_size)
-
-        line_search_xs = _sample_on_line(
-            start_point=state.x, direction_point=candidate_x, alpha_grid=alpha_grid
-        )
-    else:
-        line_search_xs = None
-
-    # ==================================================================================
-    # Check whether there are any unallocated evaluations left, and if yes perform a
-    # speculative sampling
-
-    n_evals_line_search = 0 if line_search_xs is None else len(line_search_xs)
-    n_unallocated_evals = batch_size - 1 - n_evals_line_search
-
-    if experimental:
-        radius_factor = speculative_sample_radius_factor
-        _tmp_line_search_xs = line_search_xs
-    else:
-        radius_factor = search_radius_factor
-        _tmp_line_search_xs = None
-
-    if n_unallocated_evals > 0:
-        speculative_xs = _generate_speculative_sample(
-            new_center=candidate_x,
-            search_radius_factor=radius_factor,
-            trustregion=state.trustregion,
-            sample_points=sample_points,
-            n_points=n_unallocated_evals,
-            history=history,
-            line_search_xs=_tmp_line_search_xs,
-            rng=rng,
-        )
-    else:
-        speculative_xs = None
-
-    # ==================================================================================
-    # Consolidate newly sampled points
-
-    if line_search_xs is not None and speculative_xs is not None:
-        new_xs = np.vstack([line_search_xs, speculative_xs])
-    elif line_search_xs is not None:
-        new_xs = line_search_xs
-    elif speculative_xs is not None:
-        new_xs = speculative_xs
-
-    # ==================================================================================
-    # Add new points to history and evaluate criterion
-
-    new_indices = history.add_xs(new_xs)
-
-    for idx in new_indices:
-        eval_info[idx] = 1
-
-    wrapped_criterion(eval_info)
-
-    # ==================================================================================
-    # Calculate rho
-
-    candidate_fval = np.mean(history.get_fvals(candidate_index))
-
-    actual_improvement = -(candidate_fval - state.fval)
-
-    rho = calculate_rho(
-        actual_improvement=actual_improvement,
-        expected_improvement=subproblem_solution.expected_improvement,
-    )
-
-    # ==================================================================================
-    # Check if there are any better points
-
-    new_fvals = history.get_fvals(new_indices)
-    new_fvals = pd.Series({i: np.mean(fvals) for i, fvals in new_fvals.items()})
-    new_fval_argmin = new_fvals.idxmin()
-
-    found_better_candidate = new_fvals.loc[new_fval_argmin] < candidate_fval
-
-    # If a better point was found, update the candidates
-    if found_better_candidate:
-        candidate_x = history.get_xs(new_fval_argmin)
-        candidate_fval = new_fvals.loc[new_fval_argmin]
-        candidate_index = new_fval_argmin
-
-    # ==================================================================================
-    # Calculate the overall improvement using a potentially updated candidate and draw
-    # the acceptance conclusions based on that.
-
-    overall_improvement = -(candidate_fval - state.fval)
-    is_accepted = overall_improvement >= min_improvement
-
-    # ==================================================================================
-    # Process and return results
-
-    if np.isfinite(candidate_fval):
-        res = _get_acceptance_result(
-            candidate_x=candidate_x,
-            candidate_fval=candidate_fval,
-            candidate_index=candidate_index,
-            rho=rho,
-            is_accepted=is_accepted,
-            old_state=state,
-            n_evals=1,
-        )
-    else:
-        res = _get_acceptance_result(
-            candidate_x=state.x,
-            candidate_fval=state.fval,
-            candidate_index=state.index,
-            rho=-np.inf,
-            is_accepted=False,
-            old_state=state,
-            n_evals=1,
-        )
-
-    return res
-
-
-def _accept_classic_line_search_old(
-    subproblem_solution,
-    state,
-    history,
-    *,
-    experimental,
-    wrapped_criterion,
-    min_improvement,
-    batch_size,
-    sample_points,
-    search_radius_factor,
     rng,
 ):
     # ==================================================================================
@@ -311,12 +147,12 @@ def _accept_classic_line_search_old(
     if n_unallocated_evals > 0:
         speculative_xs = _generate_speculative_sample(
             new_center=candidate_x,
-            search_radius_factor=search_radius_factor,
+            radius_factor=speculative_sample_radius_factor,
             trustregion=state.trustregion,
             sample_points=sample_points,
             n_points=n_unallocated_evals,
             history=history,
-            line_search_xs=line_search_xs if experimental else None,
+            line_search_xs=line_search_xs,
             rng=rng,
         )
     else:
@@ -601,7 +437,7 @@ def _generate_speculative_sample(
     n_points,
     history,
     line_search_xs,
-    search_radius_factor,
+    radius_factor,
     rng,
 ):
     """Generative a speculative sample.
@@ -612,8 +448,8 @@ def _generate_speculative_sample(
         sample_points (callable): Function to sample points.
         n_points (int): Number of points to sample.
         history (History): Tranquilo history.
-        search_radius_factor (float): Factor to multiply the trust region radius by to
-            get the search radius.
+        radius_factor (float): Factor to multiply the trust region radius by to get the
+            radius of the region from which to draw the speculative sample.
         rng (np.random.Generator): Random number generator.
 
     Returns:
@@ -621,7 +457,7 @@ def _generate_speculative_sample(
 
     """
     search_region = trustregion._replace(
-        center=new_center, radius=search_radius_factor * trustregion.radius
+        center=new_center, radius=radius_factor * trustregion.radius
     )
 
     old_indices = history.get_x_indices_in_region(search_region)

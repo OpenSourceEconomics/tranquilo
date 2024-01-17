@@ -89,7 +89,6 @@ def process_arguments(
     residualize=None,
     # Experimental options
     experimental=None,
-    speculative_sample_radius_factor=None,
 ):
     # warning for things that do not work well yet
     if noisy and functype == "scalar":
@@ -222,8 +221,6 @@ def process_arguments(
     accept_candidate = get_acceptance_decider(
         acceptance_decider,
         acceptance_decider_options,
-        experimental=experimental,
-        speculative_sample_radius_factor=speculative_sample_radius_factor,
     )
 
     # put everything in a dict
