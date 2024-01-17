@@ -95,7 +95,7 @@ def accept_classic_line_search(
     state,
     history,
     *,
-    speculative_sample_radius_factor,
+    speculative_sampling_radius_factor,
     wrapped_criterion,
     min_improvement,
     batch_size,
@@ -147,7 +147,7 @@ def accept_classic_line_search(
     if n_unallocated_evals > 0:
         speculative_xs = _generate_speculative_sample(
             new_center=candidate_x,
-            radius_factor=speculative_sample_radius_factor,
+            radius_factor=speculative_sampling_radius_factor,
             trustregion=state.trustregion,
             sample_points=sample_points,
             n_points=n_unallocated_evals,
