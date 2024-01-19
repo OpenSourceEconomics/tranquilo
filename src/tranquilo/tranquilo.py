@@ -34,6 +34,7 @@ def _internal_tranquilo(
     noise_adaptation_options,
     batch_size,
     target_sample_size,
+    filter_target_sample_size,
     stagnation_options,
     search_radius_factor,
     n_evals_per_point,
@@ -49,9 +50,6 @@ def _internal_tranquilo(
     aggregate_model,
     estimate_variance,
     accept_candidate,
-    # experimental options
-    experimental,
-    filter_target_sample_size_factor,
 ):
     if n_evals_at_start > 1:
         eval_info = {0: next_multiple(n_evals_at_start, base=batch_size)}
@@ -108,18 +106,11 @@ def _internal_tranquilo(
 
         old_xs = history.get_xs(old_indices)
 
-        if experimental:
-            _filter_target_sample_size_factor = filter_target_sample_size_factor
-        else:
-            _filter_target_sample_size_factor = 1
-
         model_xs, model_indices = filter_points(
             xs=old_xs,
             indices=old_indices,
             state=state,
-            target_size=int(
-                np.floor(_filter_target_sample_size_factor * target_sample_size)
-            ),
+            target_size=filter_target_sample_size,
             history=history,
             n_evals_per_point=n_evals_per_point,
         )
