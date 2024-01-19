@@ -185,7 +185,8 @@ def test_generate_speculative_sample():
         sample_points=get_sampler("random_hull"),
         n_points=3,
         history=history,
-        radius_factor=1.0,
+        search_radius_factor=5.0,
+        sample_radius_factor=1.0,
         line_search_xs=None,
         rng=np.random.default_rng(1234),
     )
