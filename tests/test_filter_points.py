@@ -1,4 +1,5 @@
 from tranquilo.filter_points import get_sample_filter
+from tranquilo.filter_points import drop_worst_points
 from tranquilo.tranquilo import State
 from tranquilo.region import Region
 from numpy.testing import assert_array_equal as aae
@@ -46,3 +47,55 @@ def test_keep_all():
     got_xs, got_idxs = filter(xs=xs, indices=indices, state=None)
     aae(got_xs, xs)
     aae(got_idxs, indices)
+
+
+def test_drop_worst_point(state):
+    xs = np.array(
+        [
+            [1, 1.1],  # should be dropped
+            [1, 1.2],
+            [1, 1],  # center (needs to have index=2)
+            [3, 3],  # should be dropped
+        ]
+    )
+
+    got_xs, got_indices = drop_worst_points(
+        xs, indices=np.arange(4), state=state, n_to_drop=2
+    )
+
+    expected_xs = np.array(
+        [
+            [1, 1.2],
+            [1, 1],
+        ]
+    )
+    expected_indices = np.array([1, 2])
+
+    aae(got_xs, expected_xs)
+    aae(got_indices, expected_indices)
+
+
+def test_drop_excess(state):
+    filter = get_sample_filter("drop_excess", user_options={"n_max_factor": 1.0})
+
+    xs = np.array(
+        [
+            [1, 1.1],  # should be dropped
+            [1, 1.2],
+            [1, 1],  # center (needs to have index=2)
+            [3, 3],  # should be dropped
+        ]
+    )
+
+    got_xs, got_indices = filter(xs, indices=np.arange(4), state=state, target_size=2)
+
+    expected_xs = np.array(
+        [
+            [1, 1.2],
+            [1, 1],
+        ]
+    )
+    expected_indices = np.array([1, 2])
+
+    aae(got_xs, expected_xs)
+    aae(got_indices, expected_indices)

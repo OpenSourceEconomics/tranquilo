@@ -140,6 +140,7 @@ class AcceptanceOptions(NamedTuple):
     n_min: int = 4
     n_max: int = 50
     min_improvement: float = 0.0
+    speculative_sampling_radius_factor: float = 0.75
 
 
 class StagnationOptions(NamedTuple):
@@ -179,6 +180,7 @@ class VarianceEstimatorOptions(NamedTuple):
 class FilterOptions(NamedTuple):
     strictness: float = 1e-10
     shape: str = "sphere"
+    n_max_factor: int = 3
 
 
 class SamplerOptions(NamedTuple):

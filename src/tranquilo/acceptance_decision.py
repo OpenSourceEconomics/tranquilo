@@ -16,7 +16,10 @@ from tranquilo.get_component import get_component
 from tranquilo.options import AcceptanceOptions
 
 
-def get_acceptance_decider(acceptance_decider, acceptance_options):
+def get_acceptance_decider(
+    acceptance_decider,
+    acceptance_options,
+):
     func_dict = {
         "classic": _accept_classic,
         "naive_noisy": accept_naive_noisy,
@@ -92,11 +95,11 @@ def accept_classic_line_search(
     state,
     history,
     *,
+    speculative_sampling_radius_factor,
     wrapped_criterion,
     min_improvement,
     batch_size,
     sample_points,
-    search_radius_factor,
     rng,
 ):
     # ==================================================================================
@@ -144,11 +147,12 @@ def accept_classic_line_search(
     if n_unallocated_evals > 0:
         speculative_xs = _generate_speculative_sample(
             new_center=candidate_x,
-            search_radius_factor=search_radius_factor,
+            radius_factor=speculative_sampling_radius_factor,
             trustregion=state.trustregion,
             sample_points=sample_points,
             n_points=n_unallocated_evals,
             history=history,
+            line_search_xs=line_search_xs,
             rng=rng,
         )
     else:
@@ -427,7 +431,14 @@ def calculate_rho(actual_improvement, expected_improvement):
 
 
 def _generate_speculative_sample(
-    new_center, trustregion, sample_points, n_points, history, search_radius_factor, rng
+    new_center,
+    trustregion,
+    sample_points,
+    n_points,
+    history,
+    line_search_xs,
+    radius_factor,
+    rng,
 ):
     """Generative a speculative sample.
 
@@ -437,8 +448,8 @@ def _generate_speculative_sample(
         sample_points (callable): Function to sample points.
         n_points (int): Number of points to sample.
         history (History): Tranquilo history.
-        search_radius_factor (float): Factor to multiply the trust region radius by to
-            get the search radius.
+        radius_factor (float): Factor to multiply the trust region radius by to get the
+            radius of the region from which to draw the speculative sample.
         rng (np.random.Generator): Random number generator.
 
     Returns:
@@ -446,14 +457,17 @@ def _generate_speculative_sample(
 
     """
     search_region = trustregion._replace(
-        center=new_center, radius=search_radius_factor * trustregion.radius
+        center=new_center, radius=radius_factor * trustregion.radius
     )
 
     old_indices = history.get_x_indices_in_region(search_region)
 
     old_xs = history.get_xs(old_indices)
 
-    model_xs = old_xs
+    if line_search_xs is not None:
+        model_xs = np.row_stack([old_xs, line_search_xs])
+    else:
+        model_xs = old_xs
 
     new_xs = sample_points(
         search_region,
