@@ -31,10 +31,6 @@ def get_default_batch_size(n_cores):
     return n_cores
 
 
-def get_default_filter_target_sample_size():
-    return 3
-
-
 def get_default_acceptance_decider(noisy):
     return "noisy" if noisy else "classic"
 
@@ -184,6 +180,7 @@ class VarianceEstimatorOptions(NamedTuple):
 class FilterOptions(NamedTuple):
     strictness: float = 1e-10
     shape: str = "sphere"
+    n_max_factor: int = 3
 
 
 class SamplerOptions(NamedTuple):

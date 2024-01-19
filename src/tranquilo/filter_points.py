@@ -50,8 +50,10 @@ def keep_all(xs, indices):
     return xs, indices
 
 
-def drop_excess(xs, indices, state, target_size):
-    n_to_drop = max(0, len(xs) - target_size)
+def drop_excess(xs, indices, state, target_size, n_max_factor):
+    filter_target_size = int(np.floor(target_size * n_max_factor))
+
+    n_to_drop = max(0, len(xs) - filter_target_size)
 
     if n_to_drop:
         xs, indices = drop_worst_points(xs, indices, state, n_to_drop)

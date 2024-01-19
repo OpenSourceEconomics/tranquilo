@@ -22,7 +22,6 @@ from tranquilo.options import (
     get_default_sample_size,
     get_default_search_radius_factor,
     get_default_stagnation_options,
-    get_default_filter_target_sample_size,
     update_option_bundle,
     NoiseAdaptationOptions,
 )
@@ -165,7 +164,6 @@ def process_arguments(
         model_type=model_type,
         x=x,
     )
-    filter_target_sample_size = _process_filter_target_sample_size(target_sample_size)
     model_fitter = _process_model_fitter(
         model_fitter, model_type=model_type, sample_size=target_sample_size, x=x
     )
@@ -233,7 +231,6 @@ def process_arguments(
         "radius_options": radius_options,
         "batch_size": batch_size,
         "target_sample_size": target_sample_size,
-        "filter_target_sample_size": filter_target_sample_size,
         "stagnation_options": stagnation_options,
         "noise_adaptation_options": noise_adaptation_options,
         "search_radius_factor": search_radius_factor,
@@ -367,8 +364,3 @@ def _process_n_evals_per_point(n_evals, noisy, noise_adaptation_options):
         raise ValueError("n_evals_per_point must be non-negative.")
 
     return out
-
-
-def _process_filter_target_sample_size(target_sample_size):
-    factor = get_default_filter_target_sample_size()
-    return int(np.floor(target_sample_size * factor))

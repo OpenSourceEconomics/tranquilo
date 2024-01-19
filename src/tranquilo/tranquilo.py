@@ -34,7 +34,6 @@ def _internal_tranquilo(
     noise_adaptation_options,
     batch_size,
     target_sample_size,
-    filter_target_sample_size,
     stagnation_options,
     search_radius_factor,
     n_evals_per_point,
@@ -110,7 +109,7 @@ def _internal_tranquilo(
             xs=old_xs,
             indices=old_indices,
             state=state,
-            target_size=filter_target_sample_size,
+            target_size=target_sample_size,
             history=history,
             n_evals_per_point=n_evals_per_point,
         )
