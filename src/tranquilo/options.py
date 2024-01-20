@@ -235,8 +235,9 @@ def update_option_bundle(default_options, user_options=None):
     # convert types if possible
     typed = {}
     for k, v in user_options.items():
-        target_type = type(getattr(default_options, k))
-        if isinstance(v, target_type):
+        default_option = getattr(default_options, k)
+        target_type = type(default_option)
+        if isinstance(v, target_type) or default_option is None:
             typed[k] = v
         else:
             typed[k] = target_type(v)
