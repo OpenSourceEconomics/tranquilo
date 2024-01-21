@@ -22,6 +22,7 @@ from tranquilo.options import (
     get_default_sample_size,
     get_default_search_radius_factor,
     get_default_stagnation_options,
+    get_default_sample_filter,
     update_option_bundle,
     NoiseAdaptationOptions,
 )
@@ -73,7 +74,7 @@ def process_arguments(
     # component names and related options
     sampler="optimal_hull",
     sampler_options=None,
-    sample_filter="keep_all",
+    sample_filter=None,
     sample_filter_options=None,
     model_fitter=None,
     model_fitter_options=None,
@@ -156,6 +157,7 @@ def process_arguments(
     acceptance_decider = _process_acceptance_decider(acceptance_decider, noisy)
 
     # process options that depend on arguments with dependent defaults
+    sample_filter = _process_sample_filter(sample_filter, batch_size)
     stagnation_options = update_option_bundle(
         get_default_stagnation_options(noisy, batch_size=batch_size), stagnation_options
     )
@@ -272,6 +274,15 @@ def _process_batch_size(batch_size, n_cores):
         raise ValueError("batch_size must be at least as large as n_cores.")
 
     return int(batch_size)
+
+
+def _process_sample_filter(sample_filter, batch_size):
+    if sample_filter is None:
+        out = get_default_sample_filter(batch_size)
+    else:
+        out = sample_filter
+
+    return out
 
 
 def _process_sample_size(sample_size, model_type, x):
