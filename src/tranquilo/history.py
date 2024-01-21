@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 
 
 class History:
@@ -172,6 +173,24 @@ class History:
             n_xs=self.n_xs,
         )
         return out
+
+    def get_best(self):
+        """Retrieve best fval and corresponding x and index.
+
+        If there are multiple evaluations per x, the best fval is computed as the mean
+        of all evaluations per x.
+
+        Returns:
+            tuple: (x, fval, index), the current minimizer x, the corresponding fval,
+                which is a mean if there are multiple evaluations per x, and the index.
+
+        """
+        average_fvals = {
+            x_index: np.mean(self.fvals[f_indices])
+            for x_index, f_indices in self.index_mapper.items()
+        }
+        index = pd.Series(average_fvals).idxmin()
+        return self.get_xs(index), average_fvals[index], index
 
     def get_n_evals(self, x_indices):
         fvals = self.get_fvals(x_indices)

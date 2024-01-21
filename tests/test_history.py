@@ -228,3 +228,10 @@ def test_get_model_data_with_repeated_evaluations(noisy_history, average):
     else:
         aaae(got_xs, np.arange(6).reshape(2, 3).repeat([2, 3], axis=0))
         aaae(got_fvecs, np.arange(25).reshape(5, 5))
+
+
+def test_get_best(noisy_history):
+    x, fval, index = noisy_history.get_best()
+    assert index == 0
+    assert fval == 142.5
+    aaae(x, np.array([0, 1, 2]))
