@@ -185,10 +185,8 @@ class History:
                 which is a mean if there are multiple evaluations per x, and the index.
 
         """
-        average_fvals = {
-            x_index: np.mean(self.fvals[f_indices])
-            for x_index, f_indices in self.index_mapper.items()
-        }
+        fvals = self.get_fvals(np.arange(self.n_xs))
+        average_fvals = {key: np.mean(val) for key, val in fvals.items()}
         index = pd.Series(average_fvals).idxmin()
         return self.get_xs(index), average_fvals[index], index
 
