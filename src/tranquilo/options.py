@@ -23,6 +23,10 @@ def get_default_stagnation_options(noisy, batch_size):
     return out
 
 
+def get_default_sample_filter(batch_size):
+    return "drop_excess" if batch_size > 1 else "keep_all"
+
+
 def get_default_radius_options(x):
     return RadiusOptions(initial_radius=0.1 * np.max(np.abs(x)))
 
