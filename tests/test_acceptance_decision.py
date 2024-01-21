@@ -4,6 +4,7 @@ import numpy as np
 import pytest
 from tranquilo.sample_points import get_sampler
 from tranquilo.acceptance_decision import (
+    _accept_greedy,
     _accept_simple,
     _get_acceptance_result,
     calculate_rho,
@@ -67,6 +68,42 @@ def test_accept_simple(
         history.add_evals(indices, -indices)
 
     res_got = _accept_simple(
+        subproblem_solution=subproblem_solution,
+        state=state,
+        history=history,
+        wrapped_criterion=wrapped_criterion,
+        min_improvement=0.0,
+        n_evals=2,
+    )
+
+    assert res_got.accepted
+    assert res_got.index == 5
+    assert res_got.candidate_index == 5
+    assert_array_equal(res_got.x, subproblem_solution.x)
+    assert_array_equal(res_got.candidate_x, 1.0 + np.arange(2))
+
+
+# ======================================================================================
+# Test accept_greedy
+# ======================================================================================
+
+
+@pytest.mark.parametrize("state", states)
+def test_accept_greedy(
+    state,
+    subproblem_solution,
+):
+    history = History(functype="scalar")
+
+    idxs = history.add_xs(np.arange(10).reshape(5, 2))
+
+    history.add_evals(idxs.repeat(2), np.arange(10))
+
+    def wrapped_criterion(eval_info):
+        indices = np.array(list(eval_info)).repeat(np.array(list(eval_info.values())))
+        history.add_evals(indices, -indices)
+
+    res_got = _accept_greedy(
         subproblem_solution=subproblem_solution,
         state=state,
         history=history,

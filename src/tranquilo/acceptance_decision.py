@@ -25,6 +25,7 @@ def get_acceptance_decider(
         "naive_noisy": accept_naive_noisy,
         "noisy": accept_noisy,
         "classic_line_search": accept_classic_line_search,
+        "greedy": accept_greedy,
     }
 
     out = get_component(
@@ -35,6 +36,38 @@ def get_acceptance_decider(
         default_options=AcceptanceOptions(),
     )
 
+    return out
+
+
+def accept_greedy(
+    subproblem_solution,
+    state,
+    history,
+    *,
+    wrapped_criterion,
+    min_improvement,
+):
+    """Do a greedy acceptance step for a trustregion algorithm.
+
+    Args:
+        subproblem_solution (SubproblemResult): Result of the subproblem solution.
+        state (State): Namedtuple containing the trustregion, criterion value of
+            previously accepted point, indices of model points, etc.
+        wrapped_criterion (callable): The criterion function.
+        min_improvement (float): Minimum improvement required to accept a point.
+
+    Returns:
+        AcceptanceResult
+
+    """
+    out = _accept_greedy(
+        subproblem_solution=subproblem_solution,
+        state=state,
+        history=history,
+        wrapped_criterion=wrapped_criterion,
+        min_improvement=min_improvement,
+        n_evals=1,
+    )
     return out
 
 
@@ -234,6 +267,76 @@ def accept_classic_line_search(
             is_accepted=False,
             old_state=state,
             n_evals=1,
+        )
+
+    return res
+
+
+def _accept_greedy(
+    subproblem_solution,
+    state,
+    history,
+    *,
+    wrapped_criterion,
+    min_improvement,
+    n_evals,
+):
+    """Do a simple greedy acceptance step for a trustregion algorithm.
+
+    Args:
+        subproblem_solution (SubproblemResult): Result of the subproblem solution.
+        state (State): Namedtuple containing the trustregion, criterion value of
+            previously accepted point, indices of model points, etc.
+        wrapped_criterion (callable): The criterion function.
+        min_improvement (float): Minimum improvement required to accept a point.
+
+    Returns:
+        AcceptanceResult
+
+    """
+    candidate_x = subproblem_solution.x
+    candidate_index = history.add_xs(candidate_x)
+    wrapped_criterion({candidate_index: n_evals})
+
+    candidate_fval = np.mean(history.get_fvals(candidate_index))
+    actual_improvement = -(candidate_fval - state.fval)
+
+    rho = calculate_rho(
+        actual_improvement=actual_improvement,
+        expected_improvement=subproblem_solution.expected_improvement,
+    )
+
+    best_x, best_fval, best_index = history.get_best()
+
+    if best_fval < candidate_fval:
+        candidate_x = best_x
+        candidate_fval = best_fval
+        candidate_index = best_index
+        overall_improvement = -(candidate_fval - state.fval)
+    else:
+        overall_improvement = actual_improvement
+
+    is_accepted = overall_improvement >= min_improvement
+
+    if np.isfinite(candidate_fval):
+        res = _get_acceptance_result(
+            candidate_x=candidate_x,
+            candidate_fval=candidate_fval,
+            candidate_index=candidate_index,
+            rho=rho,
+            is_accepted=is_accepted,
+            old_state=state,
+            n_evals=n_evals,
+        )
+    else:
+        res = _get_acceptance_result(
+            candidate_x=state.x,
+            candidate_fval=state.fval,
+            candidate_index=state.index,
+            rho=-np.inf,
+            is_accepted=False,
+            old_state=state,
+            n_evals=n_evals,
         )
 
     return res
