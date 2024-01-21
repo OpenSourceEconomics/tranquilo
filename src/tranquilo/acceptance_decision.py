@@ -65,22 +65,29 @@ def accept_greedy(
     wrapped_criterion({candidate_index: 1})
 
     candidate_fval = np.mean(history.get_fvals(candidate_index))
-    actual_improvement = -(candidate_fval - state.fval)
+    candidate_improvement = -(candidate_fval - state.fval)
 
     rho = calculate_rho(
-        actual_improvement=actual_improvement,
+        actual_improvement=candidate_improvement,
         expected_improvement=subproblem_solution.expected_improvement,
     )
 
     best_x, best_fval, best_index = history.get_best()
+    
+    assert np.isfinite(best_fval)
+    assert isinstance(best_x, np.ndarray)
+    assert isinstance(best_index, int)
+    assert isinstance(best_fval, float)
+    assert best_x.ndim == 1
+    assert np.mean(history.get_fvals(best_index)) == best_fval
 
-    if best_fval < candidate_fval:
+    if best_fval < candidate_fval and best_fval < state.fval:
         candidate_x = best_x
         candidate_fval = best_fval
         candidate_index = best_index
-        overall_improvement = -(candidate_fval - state.fval)
+        overall_improvement = -(best_fval - state.fval)
     else:
-        overall_improvement = actual_improvement
+        overall_improvement = candidate_improvement
 
     is_accepted = overall_improvement >= min_improvement
 

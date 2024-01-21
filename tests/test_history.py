@@ -233,5 +233,6 @@ def test_get_model_data_with_repeated_evaluations(noisy_history, average):
 def test_get_best(noisy_history):
     x, fval, index = noisy_history.get_best()
     assert index == 0
+    assert isinstance(index, int)
     assert fval == 142.5
     aaae(x, np.array([0, 1, 2]))

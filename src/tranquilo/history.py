@@ -187,7 +187,7 @@ class History:
         """
         fvals = self.get_fvals(np.arange(self.n_xs))
         average_fvals = {key: np.mean(val) for key, val in fvals.items()}
-        index = pd.Series(average_fvals).idxmin()
+        index = int(pd.Series(average_fvals).idxmin())
         return self.get_xs(index), average_fvals[index], index
 
     def get_n_evals(self, x_indices):
