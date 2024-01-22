@@ -41,15 +41,42 @@ def test_process_batch_size_invalid():
 
 def test_process_sample_size():
     x = np.arange(3)
-    assert _process_sample_size(sample_size=None, model_type="linear", x=x) == 4
-    assert _process_sample_size(sample_size=None, model_type="quadratic", x=x) == 7
-    assert _process_sample_size(10, None, None) == 10
+    assert (
+        _process_sample_size(
+            sample_size=None, model_type="linear", x=x, noisy=True, batch_size=1
+        )
+        == 4
+    )
+    assert (
+        _process_sample_size(
+            sample_size=None, model_type="linear", x=x, noisy=False, batch_size=2
+        )
+        == 4
+    )
+    assert (
+        _process_sample_size(
+            sample_size=None, model_type="linear", x=x, noisy=False, batch_size=1
+        )
+        == 5
+    )
+    assert (
+        _process_sample_size(
+            sample_size=None, model_type="quadratic", x=x, noisy=False, batch_size=1
+        )
+        == 7
+    )
+    assert _process_sample_size(10, None, None, False, 1) == 10
 
 
 def test_process_sample_size_callable():
     x = np.arange(3)
     sample_size = lambda x, model_type: len(x) ** 2
-    assert _process_sample_size(sample_size=sample_size, model_type="linear", x=x) == 9
+    assert (
+        _process_sample_size(
+            sample_size=sample_size, model_type="linear", x=x, noisy=False, batch_size=1
+        )
+        == 9
+    )
 
 
 def test_process_model_type():

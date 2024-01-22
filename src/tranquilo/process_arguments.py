@@ -165,6 +165,8 @@ def process_arguments(
         sample_size=sample_size,
         model_type=model_type,
         x=x,
+        noisy=noisy,
+        batch_size=batch_size,
     )
     model_fitter = _process_model_fitter(
         model_fitter, model_type=model_type, sample_size=target_sample_size, x=x
@@ -285,9 +287,11 @@ def _process_sample_filter(sample_filter, batch_size):
     return out
 
 
-def _process_sample_size(sample_size, model_type, x):
+def _process_sample_size(sample_size, model_type, x, noisy, batch_size):
     if sample_size is None:
-        out = get_default_sample_size(model_type=model_type, x=x)
+        out = get_default_sample_size(
+            model_type=model_type, x=x, noisy=noisy, batch_size=batch_size
+        )
     elif callable(sample_size):
         out = sample_size(x=x, model_type=model_type)
     else:

@@ -39,11 +39,17 @@ def get_default_acceptance_decider(noisy):
     return "noisy" if noisy else "classic"
 
 
-def get_default_sample_size(model_type, x):
+def get_default_sample_size(model_type, x, noisy, batch_size):
     if model_type == "quadratic":
         out = 2 * len(x) + 1
     else:
-        out = len(x) + 1
+        # Use one point more for the standard least-squares case. Benchmarks have not
+        # shown an improved performance for the noisy or parallel case with one
+        # additional point.
+        if noisy or batch_size > 1:
+            out = len(x) + 1
+        else:
+            out = len(x) + 2
 
     return out
 
