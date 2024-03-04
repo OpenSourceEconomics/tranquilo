@@ -1,9 +1,11 @@
 from collections import namedtuple
 
+from functools import partial
 import numpy as np
 import pytest
 from tranquilo.sample_points import get_sampler
 from tranquilo.acceptance_decision import (
+    accept_greedy,
     _accept_simple,
     _get_acceptance_result,
     calculate_rho,
@@ -80,6 +82,58 @@ def test_accept_simple(
     assert res_got.candidate_index == 5
     assert_array_equal(res_got.x, subproblem_solution.x)
     assert_array_equal(res_got.candidate_x, 1.0 + np.arange(2))
+
+
+# ======================================================================================
+# Test accept_greedy
+# ======================================================================================
+
+
+@pytest.mark.parametrize("state", states)
+def test_accept_greedy(
+    state,
+    subproblem_solution,
+):
+    """Test accept greedy.
+
+    Tests that the best point is chosen in the acceptance step, even though it is added
+    to the history before the acceptance step.
+
+    """
+    history = History(functype="scalar")
+
+    def criterion(x):
+        return np.sum(x**2)
+
+    def _wrapped_criterion(eval_info, history):
+        for x_index, _ in eval_info.items():
+            xs = history.get_xs(x_index)
+            crit_value = criterion(xs)
+            history.add_evals(np.array([x_index]), crit_value)
+
+    wrapped_criterion = partial(_wrapped_criterion, history=history)
+
+    # Add existing xs to history and evaluate wrapped criterion
+    existing_xs = np.zeros((1, 2))
+    existing_xs_indices = history.add_xs(existing_xs)
+
+    eval_info = {x_index: 1 for x_index in existing_xs_indices}
+    wrapped_criterion(eval_info)
+
+    res_got = accept_greedy(
+        subproblem_solution=subproblem_solution,
+        state=state,
+        history=history,
+        wrapped_criterion=wrapped_criterion,
+        min_improvement=0.0,
+    )
+
+    assert res_got.accepted
+    assert res_got.index == 0
+    assert res_got.candidate_index == 0
+    assert res_got.fval == 0.0
+    assert_array_equal(res_got.x, np.zeros(2))
+    assert_array_equal(res_got.candidate_x, np.zeros(2))
 
 
 # ======================================================================================
