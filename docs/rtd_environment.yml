@@ -8,7 +8,7 @@ dependencies:
   - setuptools_scm
   - toml
   - pip
-  - estimagic
+  - optimagic
   - ipython
   - ipython_genutils
   - joblib

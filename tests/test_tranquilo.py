@@ -2,30 +2,20 @@ import itertools
 
 import numpy as np
 import pytest
-from estimagic.optimization.optimize import minimize
+from optimagic.optimization.optimize import minimize
 from tranquilo.tranquilo import _tranquilo
-from numpy.testing import assert_array_almost_equal as aaae
-from estimagic.decorators import mark_minimizer
 from functools import partial
+from numpy.testing import assert_array_almost_equal as aaae
 
 
-tranquilo = mark_minimizer(
-    func=partial(_tranquilo, functype="scalar"),
-    name="tranquilo",
-    primary_criterion_entry="value",
-    needs_scaling=True,
-    is_available=True,
-    is_global=False,
+tranquilo = partial(
+    _tranquilo,
+    functype="scalar",
 )
 
-
-tranquilo_ls = mark_minimizer(
-    func=partial(_tranquilo, functype="least_squares"),
-    primary_criterion_entry="root_contributions",
-    name="tranquilo_ls",
-    needs_scaling=True,
-    is_available=True,
-    is_global=False,
+tranquilo_ls = partial(
+    _tranquilo,
+    functype="least_squares",
 )
 
 
@@ -239,7 +229,7 @@ def sum_of_squares(x):
     return {"value": contribs.sum(), "contributions": contribs, "root_contributions": x}
 
 
-@pytest.mark.parametrize("algorithm", [tranquilo, tranquilo_ls])
+@pytest.mark.parametrize("algorithm", ["tranquilo", "tranquilo_ls"])
 def test_tranquilo_with_binding_bounds(algorithm):
     res = minimize(
         criterion=sum_of_squares,

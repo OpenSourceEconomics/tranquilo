@@ -1,18 +1,5 @@
-from estimagic.optimization.optimize import minimize
-from estimagic.benchmarking.get_benchmark_problems import get_benchmark_problems
-from tranquilo.tranquilo import _tranquilo
-from estimagic.decorators import mark_minimizer
-from functools import partial
-
-
-tranquilo = mark_minimizer(
-    func=partial(_tranquilo, functype="scalar"),
-    name="tranquilo",
-    primary_criterion_entry="value",
-    needs_scaling=True,
-    is_available=True,
-    is_global=False,
-)
+from optimagic.optimization.optimize import minimize
+from optimagic.benchmarking.get_benchmark_problems import get_benchmark_problems
 
 
 def test_gqtpar_lambdas():
@@ -29,5 +16,5 @@ def test_gqtpar_lambdas():
         criterion=problem_info["inputs"]["criterion"],
         params=problem_info["inputs"]["params"],
         algo_options=algo_options,
-        algorithm=tranquilo,
+        algorithm="tranquilo",
     )
