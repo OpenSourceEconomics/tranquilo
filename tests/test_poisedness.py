@@ -113,7 +113,7 @@ TEST_CASES = [
 
 
 @pytest.mark.skipif(
-    sys.platform in ("win32", "darwin"), reason="Test is inaccurate on Windows."
+    sys.platform in ("win32", "darwin"), reason="Test is inaccurate on Windows and Mac."
 )
 @pytest.mark.parametrize("sample, shape, maxiter, expected", TEST_CASES)
 def test_improve_poisedness(sample, shape, maxiter, expected):
