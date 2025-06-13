@@ -6,6 +6,7 @@ from optimagic.optimization.optimize import minimize
 from tranquilo.tranquilo import _tranquilo
 from functools import partial
 from numpy.testing import assert_array_almost_equal as aaae
+from optimagic import mark
 
 
 tranquilo = partial(
@@ -122,7 +123,7 @@ def test_external_tranquilo_scalar_sphere_defaults():
     res = minimize(
         criterion=lambda x: x @ x,
         params=np.arange(4),
-        algorithm=tranquilo,
+        algorithm="tranquilo",
     )
 
     aaae(res.params, np.zeros(4), decimal=4)
@@ -173,9 +174,9 @@ def test_internal_tranquilo_ls_sphere_defaults(
 
 def test_external_tranquilo_ls_sphere_defaults():
     res = minimize(
-        criterion=lambda x: x,
+        criterion=mark.least_squares(lambda x: x),
         params=np.arange(5),
-        algorithm=tranquilo_ls,
+        algorithm="tranquilo_ls",
     )
 
     aaae(res.params, np.zeros(5), decimal=5)
@@ -186,7 +187,7 @@ def test_external_tranquilo_ls_sphere_defaults():
 # ======================================================================================
 
 
-@pytest.mark.parametrize("algo", [tranquilo, tranquilo_ls])
+@pytest.mark.parametrize("algo", ["tranquilo", "tranquilo_ls"])
 def test_tranquilo_with_noise_handling_and_deterministic_function(algo):
     def _f(x):
         return {"root_contributions": x, "value": x @ x}
@@ -212,7 +213,7 @@ def test_tranquilo_ls_with_noise_handling_and_noisy_function():
     res = minimize(
         criterion=_f,
         params=np.ones(3),
-        algorithm=tranquilo_ls,
+        algorithm="tranquilo_ls",
         algo_options={"noisy": True, "n_evals_per_point": 10},
     )
 

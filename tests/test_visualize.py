@@ -35,6 +35,13 @@ for problem in ["rosenbrock_good_start", "watson_6_good_start"]:
         cases.append(results)
 
 
+skip_reason = (
+    "History collection of tranquilo and tranquilo_ls is disabled in optimagic, but"
+    "visualize_tranquilo requires a history."
+)
+
+
+@pytest.mark.skip(reason=skip_reason)
 @pytest.mark.parametrize("results", cases)
 def test_visualize_tranquilo(results):
     visualize_tranquilo(results, 5)

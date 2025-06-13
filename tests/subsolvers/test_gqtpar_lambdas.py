@@ -13,7 +13,7 @@ def test_gqtpar_lambdas():
     problem_info = get_benchmark_problems("more_wild")["freudenstein_roth_good_start"]
 
     minimize(
-        criterion=problem_info["inputs"]["criterion"],
+        criterion=problem_info["inputs"]["fun"],
         params=problem_info["inputs"]["params"],
         algo_options=algo_options,
         algorithm="tranquilo",
