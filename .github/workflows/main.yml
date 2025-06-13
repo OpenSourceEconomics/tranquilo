@@ -27,12 +27,12 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: create build environment
-        uses: mamba-org/provision-with-micromamba@main
+        uses: mamba-org/setup-micromamba@v2
         with:
           environment-file: ./.envs/testenv-linux.yml
           environment-name: tranquilo
-          cache-env: true
-          extra-specs: |
+          cache-environment: true
+          create-args: >-
             python=${{ matrix.python-version }}
       - name: run pytest
         shell: bash -l {0}
@@ -60,12 +60,12 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: create build environment
-        uses: mamba-org/provision-with-micromamba@main
+        uses: mamba-org/setup-micromamba@v2
         with:
           environment-file: ./.envs/testenv-others.yml
           environment-name: tranquilo
-          cache-env: true
-          extra-specs: |
+          cache-environment: true
+          create-args: >-
             python=${{ matrix.python-version }}
       - name: run pytest
         shell: bash -l {0}
