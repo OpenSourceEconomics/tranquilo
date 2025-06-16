@@ -60,7 +60,7 @@ def gqtpar_fast(model, x_candidate, *, k_easy=0.1, k_hard=0.2, maxiter=200):
     # than that backward substituition is not reliable.
     # See Golub, G. H., Van Loan, C. F. (2013), "Matrix computations", p.165.
     zero_threshold = (
-        model_hessian.shape[0] * np.finfo(float).eps * _norm(model_hessian, np.Inf)
+        model_hessian.shape[0] * np.finfo(float).eps * _norm(model_hessian, np.inf)
     )
     stopping_criteria = {
         "k_easy": k_easy,
@@ -179,7 +179,7 @@ def _get_initial_guess_for_lambdas(model_gradient, model_hessian):
     gradient_norm = _norm(model_gradient, -1.0)
     model_hessian = model_hessian
 
-    hessian_infinity_norm = _norm(model_hessian, np.Inf)
+    hessian_infinity_norm = _norm(model_hessian, np.inf)
     hessian_frobenius_norm = _norm(model_hessian, -1.0)
 
     hessian_gershgorin_lower, hessian_gershgorin_upper = _compute_gershgorin_bounds(

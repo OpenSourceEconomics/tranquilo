@@ -8,7 +8,7 @@ from plotly import figure_factory as ff
 from plotly import graph_objects as go
 from plotly.subplots import make_subplots
 
-from estimagic.optimization.optimize_result import OptimizeResult
+from optimagic.optimization.optimize_result import OptimizeResult
 from tranquilo.clustering import cluster
 from tranquilo.geometry import log_d_quality_calculator
 from tranquilo.volume import get_radius_after_volume_scaling
@@ -25,8 +25,8 @@ def visualize_tranquilo(results, iterations):
     `nag_pybobyqa` and `nag_dfols`.
 
     Args:
-        results (dict or OptimizeResult): An estimagic optimization result or a
-            dictionary with different estimagic optimization results.
+        results (dict or OptimizeResult): An optimagic optimization result or a
+            dictionary with different optimagic optimization results.
         iterations (int, list, tuple or dict): The iterations to compare the results
             at. Can be an integer if we want to compare different results at the same
             iteration, a list or tuple if we want to compare different iterations of

@@ -1,30 +1,8 @@
 import pytest
-from estimagic.optimization.optimize import minimize
-from estimagic.benchmarking.get_benchmark_problems import get_benchmark_problems
+from optimagic.optimization.optimize import minimize
+from optimagic.benchmarking.get_benchmark_problems import get_benchmark_problems
 from tranquilo.visualize import visualize_tranquilo
-from tranquilo.tranquilo import _tranquilo
-from estimagic.decorators import mark_minimizer
-from functools import partial
 
-
-tranquilo = mark_minimizer(
-    func=partial(_tranquilo, functype="scalar"),
-    name="tranquilo",
-    primary_criterion_entry="value",
-    needs_scaling=True,
-    is_available=True,
-    is_global=False,
-)
-
-
-tranquilo_ls = mark_minimizer(
-    func=partial(_tranquilo, functype="least_squares"),
-    primary_criterion_entry="root_contributions",
-    name="tranquilo_ls",
-    needs_scaling=True,
-    is_available=True,
-    is_global=False,
-)
 
 cases = []
 algo_options = {
@@ -43,13 +21,13 @@ algo_options = {
 }
 for problem in ["rosenbrock_good_start", "watson_6_good_start"]:
     inputs = get_benchmark_problems("more_wild")[problem]["inputs"]
-    criterion = inputs["criterion"]
+    fun = inputs["fun"]
     start_params = inputs["params"]
-    for algorithm in [tranquilo, tranquilo_ls]:
+    for algorithm in ["tranquilo", "tranquilo_ls"]:
         results = {}
         for s, options in algo_options.items():
             results[s] = minimize(
-                criterion=criterion,
+                criterion=fun,
                 params=start_params,
                 algo_options=options,
                 algorithm=algorithm,
@@ -57,6 +35,13 @@ for problem in ["rosenbrock_good_start", "watson_6_good_start"]:
         cases.append(results)
 
 
+skip_reason = (
+    "History collection of tranquilo and tranquilo_ls is disabled in optimagic, but"
+    "visualize_tranquilo requires a history."
+)
+
+
+@pytest.mark.skip(reason=skip_reason)
 @pytest.mark.parametrize("results", cases)
 def test_visualize_tranquilo(results):
     visualize_tranquilo(results, 5)

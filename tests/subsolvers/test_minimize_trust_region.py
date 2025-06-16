@@ -245,7 +245,7 @@ def test_update_candidate_vector_and_reduction_without_active_bounds():
         step_len,
         total_reduction,
         curve_min,
-        np.array([]),
+        None,
         gradient_projected_sumsq,
         gradient_sumsq,
         g_hess_g,

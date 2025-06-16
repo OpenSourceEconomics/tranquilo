@@ -2,30 +2,21 @@ import itertools
 
 import numpy as np
 import pytest
-from estimagic.optimization.optimize import minimize
+from optimagic.optimization.optimize import minimize
 from tranquilo.tranquilo import _tranquilo
-from numpy.testing import assert_array_almost_equal as aaae
-from estimagic.decorators import mark_minimizer
 from functools import partial
+from numpy.testing import assert_array_almost_equal as aaae
+from optimagic import mark
 
 
-tranquilo = mark_minimizer(
-    func=partial(_tranquilo, functype="scalar"),
-    name="tranquilo",
-    primary_criterion_entry="value",
-    needs_scaling=True,
-    is_available=True,
-    is_global=False,
+tranquilo = partial(
+    _tranquilo,
+    functype="scalar",
 )
 
-
-tranquilo_ls = mark_minimizer(
-    func=partial(_tranquilo, functype="least_squares"),
-    primary_criterion_entry="root_contributions",
-    name="tranquilo_ls",
-    needs_scaling=True,
-    is_available=True,
-    is_global=False,
+tranquilo_ls = partial(
+    _tranquilo,
+    functype="least_squares",
 )
 
 
@@ -132,7 +123,7 @@ def test_external_tranquilo_scalar_sphere_defaults():
     res = minimize(
         criterion=lambda x: x @ x,
         params=np.arange(4),
-        algorithm=tranquilo,
+        algorithm="tranquilo",
     )
 
     aaae(res.params, np.zeros(4), decimal=4)
@@ -183,9 +174,9 @@ def test_internal_tranquilo_ls_sphere_defaults(
 
 def test_external_tranquilo_ls_sphere_defaults():
     res = minimize(
-        criterion=lambda x: x,
+        criterion=mark.least_squares(lambda x: x),
         params=np.arange(5),
-        algorithm=tranquilo_ls,
+        algorithm="tranquilo_ls",
     )
 
     aaae(res.params, np.zeros(5), decimal=5)
@@ -196,7 +187,7 @@ def test_external_tranquilo_ls_sphere_defaults():
 # ======================================================================================
 
 
-@pytest.mark.parametrize("algo", [tranquilo, tranquilo_ls])
+@pytest.mark.parametrize("algo", ["tranquilo", "tranquilo_ls"])
 def test_tranquilo_with_noise_handling_and_deterministic_function(algo):
     def _f(x):
         return {"root_contributions": x, "value": x @ x}
@@ -222,7 +213,7 @@ def test_tranquilo_ls_with_noise_handling_and_noisy_function():
     res = minimize(
         criterion=_f,
         params=np.ones(3),
-        algorithm=tranquilo_ls,
+        algorithm="tranquilo_ls",
         algo_options={"noisy": True, "n_evals_per_point": 10},
     )
 
@@ -239,7 +230,7 @@ def sum_of_squares(x):
     return {"value": contribs.sum(), "contributions": contribs, "root_contributions": x}
 
 
-@pytest.mark.parametrize("algorithm", [tranquilo, tranquilo_ls])
+@pytest.mark.parametrize("algorithm", ["tranquilo", "tranquilo_ls"])
 def test_tranquilo_with_binding_bounds(algorithm):
     res = minimize(
         criterion=sum_of_squares,
