@@ -80,9 +80,9 @@ def process_batch_evaluator(batch_evaluator="joblib"):
         out = batch_evaluator
     elif isinstance(batch_evaluator, str):
         if batch_evaluator == "joblib":
-            from optimagic.batch_evaluators import joblib_batch_evaluator as out
+            from tranquilo.batch_evaluators import joblib_batch_evaluator as out
         elif batch_evaluator == "pathos":
-            from optimagic.batch_evaluators import pathos_mp_batch_evaluator as out
+            from tranquilo.batch_evaluators import pathos_mp_batch_evaluator as out
         else:
             raise ValueError(
                 "Invalid batch evaluator requested. Currently only 'pathos' and "

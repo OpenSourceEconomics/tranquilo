@@ -1,4 +1,5 @@
 from typing import NamedTuple
+from enum import Enum
 from tranquilo.models import n_free_params
 
 import numpy as np
@@ -256,3 +257,11 @@ def update_option_bundle(default_options, user_options=None):
     out = default_options._replace(**typed)
 
     return out
+
+
+class ErrorHandling(Enum):
+    """Enum to specify the error handling strategy of the optimization algorithm."""
+
+    RAISE = "raise"
+    RAISE_STRICT = "raise_strict"
+    CONTINUE = "continue"
