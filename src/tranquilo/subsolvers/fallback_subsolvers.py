@@ -184,7 +184,17 @@ def _get_crit_and_grad(model):
     return crit, grad
 
 
+def _get_constraint():
+    """Constraint enforcing ||x||^2 <= 1 as a simple inequality for SLSQP."""
+    return {
+        "type": "ineq",
+        "fun": lambda x: 1 - x @ x,
+        "jac": lambda x: -2 * x,
+    }
+
+
 # def _get_constraint():
+#     """Raises scipy warning."""
 #     def _constr_fun(x):
 #         return x @ x
 
@@ -198,12 +208,3 @@ def _get_crit_and_grad(model):
 #         jac=_constr_jac,
 #         keep_feasible=True,
 #     )
-
-
-def _get_constraint():
-    """Constraint enforcing ||x||^2 <= 1 as a simple inequality for SLSQP."""
-    return {
-        "type": "ineq",
-        "fun": lambda x: 1 - x @ x,
-        "jac": lambda x: -2 * x,
-    }
