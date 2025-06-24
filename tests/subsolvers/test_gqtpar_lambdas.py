@@ -1,7 +1,12 @@
-from optimagic.optimization.optimize import minimize
-from optimagic.benchmarking.get_benchmark_problems import get_benchmark_problems
+import pytest
+from tranquilo.config import IS_OPTIMAGIC_INSTALLED
+
+if IS_OPTIMAGIC_INSTALLED:
+    from optimagic.optimization.optimize import minimize
+    from optimagic.benchmarking.get_benchmark_problems import get_benchmark_problems
 
 
+@pytest.mark.skipif(not IS_OPTIMAGIC_INSTALLED, reason="optimagic is not installed.")
 def test_gqtpar_lambdas():
     algo_options = {
         "disable_convergence": True,

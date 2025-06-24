@@ -1,8 +1,10 @@
 import pytest
-from optimagic.optimization.optimize import minimize
-from optimagic.benchmarking.get_benchmark_problems import get_benchmark_problems
 from tranquilo.visualize import visualize_tranquilo
+from tranquilo.config import IS_OPTIMAGIC_INSTALLED
 
+if IS_OPTIMAGIC_INSTALLED:
+    from optimagic.optimization.optimize import minimize
+    from optimagic.benchmarking.get_benchmark_problems import get_benchmark_problems
 
 cases = []
 algo_options = {

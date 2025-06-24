@@ -1,9 +1,16 @@
 import numpy as np
 import pytest
-from optimagic.differentiation.derivatives import first_derivative, second_derivative
+from numpy.testing import assert_array_almost_equal, assert_array_equal
+
 from tranquilo.fit_models import _quadratic_features, get_fitter
 from tranquilo.region import Region
-from numpy.testing import assert_array_almost_equal, assert_array_equal
+from tranquilo.config import IS_OPTIMAGIC_INSTALLED
+
+if IS_OPTIMAGIC_INSTALLED:
+    from optimagic.differentiation.derivatives import (
+        first_derivative,
+        second_derivative,
+    )
 
 
 def aaae(x, y, decimal=None, case=None):
@@ -91,6 +98,7 @@ def test_fit_against_truth_quadratic(fitter, quadratic_case):
     )
 
 
+@pytest.mark.skipif(not IS_OPTIMAGIC_INSTALLED, reason="optimagic is not installed.")
 @pytest.mark.parametrize("model", ["ols", "ridge", "tranquilo"])
 def test_fit_ols_against_gradient(model, quadratic_case):
     options = {"l2_penalty_square": 0}
@@ -116,6 +124,7 @@ def test_fit_ols_against_gradient(model, quadratic_case):
     aaae(gradient["derivative"], grad, case="gradient")
 
 
+@pytest.mark.skipif(not IS_OPTIMAGIC_INSTALLED, reason="optimagic is not installed.")
 @pytest.mark.parametrize("model", ("ols", "ridge", "tranquilo", "powell"))
 def test_fit_ols_against_hessian(model, quadratic_case):
     options = {"l2_penalty_square": 0}

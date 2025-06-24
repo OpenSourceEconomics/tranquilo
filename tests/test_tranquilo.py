@@ -1,12 +1,16 @@
 import itertools
 
-import numpy as np
 import pytest
-from optimagic.optimization.optimize import minimize
-from tranquilo.tranquilo import _tranquilo
 from functools import partial
+import numpy as np
 from numpy.testing import assert_array_almost_equal as aaae
-from optimagic import mark
+
+from tranquilo.tranquilo import _tranquilo
+from tranquilo.config import IS_OPTIMAGIC_INSTALLED
+
+if IS_OPTIMAGIC_INSTALLED:
+    from optimagic.optimization.optimize import minimize
+    from optimagic import mark
 
 
 tranquilo = partial(
@@ -119,6 +123,7 @@ def test_internal_tranquilo_scalar_sphere_imprecise_defaults(
 # ======================================================================================
 
 
+@pytest.mark.skipif(not IS_OPTIMAGIC_INSTALLED, reason="optimagic is not installed.")
 def test_external_tranquilo_scalar_sphere_defaults():
     res = minimize(
         criterion=lambda x: x @ x,
@@ -172,6 +177,7 @@ def test_internal_tranquilo_ls_sphere_defaults(
 # ======================================================================================
 
 
+@pytest.mark.skipif(not IS_OPTIMAGIC_INSTALLED, reason="optimagic is not installed.")
 def test_external_tranquilo_ls_sphere_defaults():
     res = minimize(
         criterion=mark.least_squares(lambda x: x),
@@ -187,6 +193,7 @@ def test_external_tranquilo_ls_sphere_defaults():
 # ======================================================================================
 
 
+@pytest.mark.skipif(not IS_OPTIMAGIC_INSTALLED, reason="optimagic is not installed.")
 @pytest.mark.parametrize("algo", ["tranquilo", "tranquilo_ls"])
 def test_tranquilo_with_noise_handling_and_deterministic_function(algo):
     def _f(x):
@@ -202,6 +209,7 @@ def test_tranquilo_with_noise_handling_and_deterministic_function(algo):
     aaae(res.params, np.zeros(5), decimal=3)
 
 
+@pytest.mark.skipif(not IS_OPTIMAGIC_INSTALLED, reason="optimagic is not installed.")
 @pytest.mark.slow()
 def test_tranquilo_ls_with_noise_handling_and_noisy_function():
     rng = np.random.default_rng(123)
@@ -230,6 +238,7 @@ def sum_of_squares(x):
     return {"value": contribs.sum(), "contributions": contribs, "root_contributions": x}
 
 
+@pytest.mark.skipif(not IS_OPTIMAGIC_INSTALLED, reason="optimagic is not installed.")
 @pytest.mark.parametrize("algorithm", ["tranquilo", "tranquilo_ls"])
 def test_tranquilo_with_binding_bounds(algorithm):
     res = minimize(

@@ -18,6 +18,18 @@ CRITERION_PENALTY_SLOPE = 0.1
 CRITERION_PENALTY_CONSTANT = 100
 
 
+# ======================================================================================
+# Check Available Packages
+# ======================================================================================
+
+try:
+    import optimagic  # noqa: F401
+except ImportError:
+    IS_OPTIMAGIC_INSTALLED = False
+else:
+    IS_OPTIMAGIC_INSTALLED = True
+
+
 # =================================================================================
 # Dashboard Defaults
 # =================================================================================
