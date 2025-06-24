@@ -126,7 +126,7 @@ def test_internal_tranquilo_scalar_sphere_imprecise_defaults(
 @pytest.mark.skipif(not IS_OPTIMAGIC_INSTALLED, reason="optimagic is not installed.")
 def test_external_tranquilo_scalar_sphere_defaults():
     res = minimize(
-        criterion=lambda x: x @ x,
+        fun=lambda x: x @ x,
         params=np.arange(4),
         algorithm="tranquilo",
     )
@@ -180,7 +180,7 @@ def test_internal_tranquilo_ls_sphere_defaults(
 @pytest.mark.skipif(not IS_OPTIMAGIC_INSTALLED, reason="optimagic is not installed.")
 def test_external_tranquilo_ls_sphere_defaults():
     res = minimize(
-        criterion=mark.least_squares(lambda x: x),
+        fun=mark.least_squares(lambda x: x),
         params=np.arange(5),
         algorithm="tranquilo_ls",
     )
@@ -194,15 +194,18 @@ def test_external_tranquilo_ls_sphere_defaults():
 
 
 @pytest.mark.skipif(not IS_OPTIMAGIC_INSTALLED, reason="optimagic is not installed.")
-@pytest.mark.parametrize("algo", ["tranquilo", "tranquilo_ls"])
-def test_tranquilo_with_noise_handling_and_deterministic_function(algo):
-    def _f(x):
-        return {"root_contributions": x, "value": x @ x}
-
+@pytest.mark.parametrize(
+    "algorithm, criterion",
+    [
+        ("tranquilo", mark.scalar(lambda x: x @ x)),
+        ("tranquilo_ls", mark.least_squares(lambda x: x)),
+    ],
+)
+def test_tranquilo_with_noise_handling_and_deterministic_function(algorithm, criterion):
     res = minimize(
-        criterion=_f,
+        fun=criterion,
         params=np.arange(5),
-        algorithm=algo,
+        algorithm=algorithm,
         algo_options={"noisy": True},
     )
 
@@ -214,12 +217,13 @@ def test_tranquilo_with_noise_handling_and_deterministic_function(algo):
 def test_tranquilo_ls_with_noise_handling_and_noisy_function():
     rng = np.random.default_rng(123)
 
+    @mark.least_squares
     def _f(x):
         x_n = x + rng.normal(0, 0.05, size=x.shape)
-        return {"root_contributions": x_n, "value": x_n @ x_n}
+        return x_n
 
     res = minimize(
-        criterion=_f,
+        fun=_f,
         params=np.ones(3),
         algorithm="tranquilo_ls",
         algo_options={"noisy": True, "n_evals_per_point": 10},
@@ -233,19 +237,19 @@ def test_tranquilo_ls_with_noise_handling_and_noisy_function():
 # ======================================================================================
 
 
-def sum_of_squares(x):
-    contribs = x**2
-    return {"value": contribs.sum(), "contributions": contribs, "root_contributions": x}
-
-
 @pytest.mark.skipif(not IS_OPTIMAGIC_INSTALLED, reason="optimagic is not installed.")
-@pytest.mark.parametrize("algorithm", ["tranquilo", "tranquilo_ls"])
-def test_tranquilo_with_binding_bounds(algorithm):
+@pytest.mark.parametrize(
+    "algorithm, criterion",
+    [
+        ("tranquilo", mark.scalar(lambda x: x @ x)),
+        ("tranquilo_ls", mark.least_squares(lambda x: x)),
+    ],
+)
+def test_tranquilo_with_binding_bounds(algorithm, criterion):
     res = minimize(
-        criterion=sum_of_squares,
+        fun=criterion,
         params=np.array([3, 2, -3]),
-        lower_bounds=np.array([1, -np.inf, -np.inf]),
-        upper_bounds=np.array([np.inf, np.inf, -1]),
+        bounds=[(1, np.inf), (-np.inf, np.inf), (-np.inf, -1)],
         algorithm=algorithm,
         collect_history=True,
         skip_checks=True,

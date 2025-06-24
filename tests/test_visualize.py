@@ -12,13 +12,13 @@ algo_options = {
         "sampler": "random_hull",
         "sphere_subsolver": "gqtpar_fast",
         "sample_filter": "keep_all",
-        "stopping_max_iterations": 10,
+        "stopping_maxiter": 10,
     },
     "optimal_hull": {
         "sampler": "optimal_hull",
         "sphere_subsolver": "gqtpar_fast",
         "sample_filter": "keep_all",
-        "stopping_max_iterations": 10,
+        "stopping_maxiter": 10,
     },
 }
 for problem in ["rosenbrock_good_start", "watson_6_good_start"]:
@@ -29,7 +29,7 @@ for problem in ["rosenbrock_good_start", "watson_6_good_start"]:
         results = {}
         for s, options in algo_options.items():
             results[s] = minimize(
-                criterion=fun,
+                fun=fun,
                 params=start_params,
                 algo_options=options,
                 algorithm=algorithm,

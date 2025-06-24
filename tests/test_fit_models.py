@@ -121,7 +121,7 @@ def test_fit_ols_against_gradient(model, quadratic_case):
     grad = a + hess @ quadratic_case["x0"]
 
     gradient = first_derivative(quadratic_case["func"], quadratic_case["x0"])
-    aaae(gradient["derivative"], grad, case="gradient")
+    aaae(gradient.derivative, grad, case="gradient")
 
 
 @pytest.mark.skipif(not IS_OPTIMAGIC_INSTALLED, reason="optimagic is not installed.")
@@ -143,7 +143,7 @@ def test_fit_ols_against_hessian(model, quadratic_case):
     )
     hessian = second_derivative(quadratic_case["func"], quadratic_case["x0"])
     hess = got.square_terms.reshape((4, 4))
-    aaae(hessian["derivative"], hess, case="hessian")
+    aaae(hessian.derivative, hess, case="hessian")
 
 
 def test_quadratic_features():

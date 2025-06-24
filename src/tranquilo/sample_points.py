@@ -374,7 +374,7 @@ def _minimal_pairwise_distance_on_hull(
     x = _project_onto_unit_hull(x, trustregion_shape=trustregion_shape)
 
     if existing_xs is not None:
-        sample = np.row_stack([x, existing_xs])
+        sample = np.vstack([x, existing_xs])
         n_existing_pairs = len(existing_xs) * (len(existing_xs) - 1) // 2
         slc = slice(0, -n_existing_pairs) if n_existing_pairs else slice(None)
     else:
@@ -416,7 +416,7 @@ def _determinant_on_hull(x, existing_xs, trustregion_shape, n_params):
     x = _project_onto_unit_hull(x, trustregion_shape=trustregion_shape)
 
     if existing_xs is not None:
-        sample = np.row_stack([x, existing_xs])
+        sample = np.vstack([x, existing_xs])
     else:
         sample = x
 
