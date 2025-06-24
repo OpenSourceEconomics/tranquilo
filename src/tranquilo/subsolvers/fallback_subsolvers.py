@@ -80,8 +80,9 @@ def robust_cube_solver_multistart(model, x_candidate):
 def robust_sphere_solver_inscribed_cube(model, x_candidate):
     """Robust sphere solver that uses a cube solver in an inscribed cube.
 
-    We let x be in the largest cube that is inscribed inside the unit sphere. Formula
-    is taken from http://tinyurl.com/4astpuwn.
+    We let x be in the largest cube that is inscribed inside the unit sphere. Formula is
+    taken from
+    http://tinyurl.com/4astpuwn.
 
     This solver cannot find solutions on the hull of the sphere.
 

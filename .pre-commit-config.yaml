@@ -6,7 +6,7 @@ repos:
       - id: check-useless-excludes
         # - id: identity  # Prints all files passed to pre-commits. Debugging.
   - repo: https://github.com/lyz-code/yamlfix
-    rev: 1.9.0
+    rev: 1.17.0
     hooks:
       - id: yamlfix
   - repo: local
@@ -61,17 +61,17 @@ repos:
     rev: 1.13.0
     hooks:
       - id: blacken-docs
-#   - repo: https://github.com/PyCQA/docformatter
-#     rev: v1.5.1
-#     hooks:
-#       - id: docformatter
-#         args:
-#           - --in-place
-#           - --wrap-summaries
-#           - '88'
-#           - --wrap-descriptions
-#           - '88'
-#           - --blank
+  - repo: https://github.com/PyCQA/docformatter
+    rev: v1.7.7
+    hooks:
+      - id: docformatter
+        args:
+          - --in-place
+          - --wrap-summaries
+          - '88'
+          - --wrap-descriptions
+          - '88'
+          - --blank
   - repo: https://github.com/charliermarsh/ruff-pre-commit
     rev: v0.0.261
     hooks:
@@ -91,7 +91,7 @@ repos:
       - id: nbqa-black
       - id: nbqa-ruff
   - repo: https://github.com/executablebooks/mdformat
-    rev: 0.7.16
+    rev: 0.7.22
     hooks:
       - id: mdformat
         additional_dependencies:
