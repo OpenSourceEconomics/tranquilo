@@ -8,10 +8,11 @@ from plotly import figure_factory as ff
 from plotly import graph_objects as go
 from plotly.subplots import make_subplots
 
-from optimagic.optimization.optimize_result import OptimizeResult
 from tranquilo.clustering import cluster
 from tranquilo.geometry import log_d_quality_calculator
 from tranquilo.volume import get_radius_after_volume_scaling
+
+from typing import Any, Protocol, runtime_checkable
 
 
 def visualize_tranquilo(results, iterations):
@@ -56,7 +57,7 @@ def visualize_tranquilo(results, iterations):
     if isinstance(iterations, int):
         iterations = {case: iterations for case in results}
         results = {case: _process_results(results[case]) for case in results}
-    elif isinstance(results, OptimizeResult):
+    elif isinstance(results, OptimizeResultLike):
         results = _process_results(results)
         results = {f"iteration {i}": results for i in iterations}
         iterations = {f"iteration {iteration}": iteration for iteration in iterations}
@@ -588,3 +589,13 @@ def _get_model_indices(xs, state):
     for point in state.model_points:
         model_indices = np.concatenate([model_indices, _find_index(xs, point)])
     return model_indices.astype(int)
+
+
+@runtime_checkable
+class OptimizeResultLike(Protocol):
+    """Runtime-checkable stand-in for optimagic's OptimizeResult object."""
+
+    algorithm: str
+    history: Any
+    params: Any
+    algorithm_output: dict
