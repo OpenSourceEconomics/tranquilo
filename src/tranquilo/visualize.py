@@ -84,8 +84,8 @@ def visualize_tranquilo(results, iterations):
         result = results[case]
         iteration = iterations[case]
         state = result.algorithm_output["states"][iteration]
-        params_history = np.array(result.history["params"])
-        criterion_history = np.array(result.history["criterion"])
+        params_history = np.array(result.history.params)
+        criterion_history = np.array(result.history.fun)
         fig = _plot_sample_points(
             params_history, state, color_dict, fig, row=1, col=i + 1
         )
@@ -320,7 +320,7 @@ def _plot_fekete_criterion(res, fig, row, col, iteration):
 
 def _plot_clusters_points_ratio(res, iteration, fig, row, col):
     dim = res.params.shape[0]
-    history = np.array(res.history["params"])
+    history = np.array(res.history.params)
     states = res.algorithm_output["states"]
     colors = [
         "rgb(251,106,74)",
@@ -423,7 +423,7 @@ def _plot_distances_from_center(history, state, fig, col, rows):
 
 def _get_fekete_criterion(res):
     states = res.algorithm_output["states"][1:]
-    history = np.array(res.history["params"])
+    history = np.array(res.history.params)
 
     out = [np.nan] + [
         log_d_quality_calculator(
@@ -517,7 +517,7 @@ def _clean_legend_duplicates(fig):
 def _process_results(result):
     """Add model indices to states of optimization result."""
     result = deepcopy(result)
-    xs = np.array(result.history["params"])
+    xs = np.array(result.history.params)
     if result.algorithm in ["nag_pybobyqa", "nag_dfols"]:
         for i in range(1, len(result.algorithm_output["states"])):
             state = result.algorithm_output["states"][i]
