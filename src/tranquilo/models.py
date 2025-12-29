@@ -98,7 +98,7 @@ def add_models(model1, model2):
         Union[ScalarModel, VectorModel]: The sum of the two models.
 
     """
-    if isinstance(model1, type(model2)):
+    if not isinstance(model1, type(model2)):
         raise TypeError("Models must be of the same type.")
 
     if not np.allclose(model1.shift, model2.shift):
