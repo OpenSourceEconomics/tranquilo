@@ -1,5 +1,8 @@
 """This module contains various decorators.
 
+The following module is taken from optimagic/decorators.py and slightly modified
+to fit into tranquilo.
+
 There are two kinds of decorators defined in this module which consists of either two or
 three nested functions. The former are decorators without and the latter with arguments.
 

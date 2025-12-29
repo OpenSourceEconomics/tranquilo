@@ -1,4 +1,5 @@
 from pathlib import Path
+import importlib.util
 
 import plotly.express as px
 
@@ -22,12 +23,13 @@ CRITERION_PENALTY_CONSTANT = 100
 # Check Available Packages
 # ======================================================================================
 
-try:
-    import optimagic  # noqa: F401
-except ImportError:
-    IS_OPTIMAGIC_INSTALLED = False
-else:
-    IS_OPTIMAGIC_INSTALLED = True
+
+def _is_installed(module_name: str) -> bool:
+    """Return True if the given module is installed, otherwise False."""
+    return importlib.util.find_spec(module_name) is not None
+
+
+IS_OPTIMAGIC_INSTALLED = _is_installed("optimagic")
 
 
 # =================================================================================
