@@ -36,12 +36,13 @@ import warnings
 def process_arguments(
     # functype, will be partialled out
     functype,
-    # problem description
-    criterion,
-    x,
+    # problem description - either batch_fun or fun must be provided
+    batch_fun=None,
+    x=None,
     lower_bounds=None,
     upper_bounds=None,
     *,
+    fun=None,
     # basic options
     noisy=False,
     # convergence options
@@ -58,7 +59,6 @@ def process_arguments(
     stopping_max_iterations=200,
     stopping_max_time=np.inf,
     # single advanced options
-    batch_evaluator="joblib",
     n_cores=1,
     batch_size=None,
     sample_size=None,
@@ -89,6 +89,18 @@ def process_arguments(
     infinity_handler="relative",
     residualize=None,
 ):
+    # Handle either batch_fun or fun being provided
+    if batch_fun is None and fun is None:
+        raise ValueError("Either batch_fun or fun must be provided.")
+    if batch_fun is not None and fun is not None:
+        raise ValueError("Only one of batch_fun or fun should be provided.")
+
+    # If fun is provided, wrap it into a simple batch_fun
+    if fun is not None:
+
+        def batch_fun(x_list, n_cores, batch_size):
+            return [fun(x) for x in x_list]
+
     # warning for things that do not work well yet
     if noisy and functype == "scalar":
         msg = (
@@ -177,9 +189,9 @@ def process_arguments(
     history = History(functype=functype)
     history.add_xs(x)
     evaluate_criterion = get_wrapped_criterion(
-        criterion=criterion,
-        batch_evaluator=batch_evaluator,
+        batch_fun=batch_fun,
         n_cores=n_cores,
+        batch_size=batch_size,
         history=history,
     )
     _bounds = Bounds(lower_bounds, upper_bounds)

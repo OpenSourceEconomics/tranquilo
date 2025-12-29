@@ -72,7 +72,7 @@ def test_internal_tranquilo_scalar_sphere_defaults(
     model_type,
 ):
     res = tranquilo(
-        criterion=lambda x: x @ x,
+        fun=lambda x: x @ x,
         x=np.arange(4),
         sample_filter=sample_filter,
         model_fitter=model_fitter,
@@ -109,7 +109,7 @@ def test_internal_tranquilo_scalar_sphere_imprecise_defaults(
     model_type,
 ):
     res = tranquilo(
-        criterion=lambda x: x @ x,
+        fun=lambda x: x @ x,
         x=np.arange(4),
         sample_filter=sample_filter,
         model_fitter=model_fitter,
@@ -163,7 +163,7 @@ def test_internal_tranquilo_ls_sphere_defaults(
     model_type,
 ):
     res = tranquilo_ls(
-        criterion=lambda x: x,
+        fun=lambda x: x,
         x=np.arange(5),
         sample_filter=sample_filter,
         model_fitter=model_fitter,

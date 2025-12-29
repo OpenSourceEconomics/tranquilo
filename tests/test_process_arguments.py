@@ -22,7 +22,7 @@ from tranquilo.process_arguments import (
 def test_process_arguments_scalar_deterministic():
     res = process_arguments(
         functype="scalar",
-        criterion=lambda x: x @ x,
+        fun=lambda x: x @ x,
         x=np.array([-3, 1, 2]),
         radius_options={"initial_radius": 1.0},
     )

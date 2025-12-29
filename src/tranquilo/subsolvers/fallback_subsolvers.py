@@ -1,6 +1,6 @@
 import numpy as np
 from functools import partial
-from scipy.optimize import Bounds, minimize
+from scipy.optimize import Bounds, minimize, NonlinearConstraint
 
 from tranquilo.exploration_sample import draw_exploration_sample
 
@@ -185,26 +185,18 @@ def _get_crit_and_grad(model):
 
 
 def _get_constraint():
-    """Constraint enforcing ||x||^2 <= 1 as a simple inequality for SLSQP."""
-    return {
-        "type": "ineq",
-        "fun": lambda x: 1 - x @ x,
-        "jac": lambda x: -2 * x,
-    }
+    """Raises scipy warning."""
 
+    def _constr_fun(x):
+        return x @ x
 
-# def _get_constraint():
-#     """Raises scipy warning."""
-#     def _constr_fun(x):
-#         return x @ x
+    def _constr_jac(x):
+        return 2 * x
 
-#     def _constr_jac(x):
-#         return 2 * x
-
-#     return NonlinearConstraint(
-#         fun=_constr_fun,
-#         lb=-np.inf,
-#         ub=1,
-#         jac=_constr_jac,
-#         keep_feasible=True,
-#     )
+    return NonlinearConstraint(
+        fun=_constr_fun,
+        lb=-np.inf,
+        ub=1,
+        jac=_constr_jac,
+        keep_feasible=True,
+    )

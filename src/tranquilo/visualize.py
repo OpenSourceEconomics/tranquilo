@@ -125,7 +125,7 @@ def _plot_criterion(history, state, color_dict, fig, row, col):
             x=np.arange(len(history)),
             showlegend=False,
             line_color="#C0C0C0",
-            name="Criterion",
+            name="criterion",
             mode="lines",
         ),
         row=row,
