@@ -6,16 +6,16 @@ channels:
 dependencies:
   - python=3.10  # dev
   - jupyterlab  # dev, docs
-  - nb_black  # dev, docs
-  - pdbpp  # dev
   - pip  # dev, tests, docs
   - pytest  # dev, tests
   - pytest-cov  # tests
   - pytest-xdist  # dev, tests
-  - setuptools_scm  # dev
+  - pytest-timeout  # dev, tests
+  - hatch  # dev
   - toml  # dev
-  - optimagic>=0.5.0  # run, tests
+  - joblib  # run, tests
   - numba  # run, tests
+  - optimagic>=0.5.0  # tests
   - numpy>=1.17.0  # run, tests
   - pandas  # run, tests
   - plotly  # run, tests
@@ -27,8 +27,7 @@ dependencies:
   - sphinx-panels  # docs
   - sphinxcontrib-bibtex  # docs
   - pip:  # dev, tests, docs
-      - black  # dev
-      - blackcellmagic  # dev
       - kaleido  # dev, tests
       - pre-commit  # dev
+      - pdbp  # dev
       - -e .  # dev

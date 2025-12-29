@@ -1,78 +1,164 @@
+# ======================================================================================
+# Project metadata
+# ======================================================================================
+[project]
+name = "tranquilo"
+description = "Trust-region optimizer for scalar, least-square and noisy problems."
+requires-python = ">=3.10"
+dependencies = [
+    "joblib",
+    "numba",
+    "numpy>=1.17.0",
+    "pandas",
+    "scipy>=1.2.1",
+]
+dynamic = ["version"]
+keywords = [
+    "optimization",
+    "dfo",
+    "derivative free optimization",
+    "noisy optimization",
+    "parallel optimization",
+    "numerical optimization",
+    "trust region",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: MacOS :: MacOS X",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering",
+]
+authors = [
+    { name = "Janos Gabler", email = "janos.gabler@gmail.com" },
+]
+maintainers = [
+    { name = "Janos Gabler", email = "janos.gabler@gmail.com" },
+    { name = "Tim Mensinger", email = "mensingertim@gmail.com" },
+]
+
+[project.readme]
+file = "README.md"
+content-type = "text/markdown"
+
+[project.license]
+text = "MIT"
+
+[project.urls]
+Repository = "https://github.com/OpenSourceEconomics/tranquilo"
+Github = "https://github.com/OpenSourceEconomics/tranquilo"
+Tracker = "https://github.com/OpenSourceEconomics/tranquilo/issues"
+
+[project.optional-dependencies]
+plotly = ["plotly"]
+
+
+# ======================================================================================
+# Build system configuration
+# ======================================================================================
 [build-system]
-requires = ["setuptools>=45", "wheel", "setuptools_scm[toml]>=6.0"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling", "hatch_vcs"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.hooks.vcs]
+version-file = "src/tranquilo/_version.py"
+
+[tool.hatch.build.targets.sdist]
+exclude = ["tests"]
+only-packages = true
+
+[tool.hatch.build.targets.wheel]
+only-include = ["src"]
+sources = ["src"]
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.metadata]
+allow-direct-references = true
 
 
-[tool.setuptools_scm]
-write_to = "src/tranquilo/_version.py"
-
-
+# ======================================================================================
+# Ruff configuration
+# ======================================================================================
 [tool.ruff]
-target-version = "py37"
+target-version = "py310"
 fix = true
 
+[tool.ruff.lint]
 select = [
-  # pyflakes
-  "F",
-  # pycodestyle
-  "E",
-  "W",
-  # flake8-2020
-  "YTT",
-  # flake8-bugbear
-  "B",
-  # flake8-quotes
-  "Q",
-  # pylint
-  "PLE", "PLR", "PLW",
-  # misc lints
-  "PIE",
-  # tidy imports
-  "TID",
-  # implicit string concatenation
-  "ISC",
+    # isort
+    "I",
+    # pyflakes
+    "F",
+    # pycodestyle
+    "E",
+    "W",
+    # flake8-2020
+    "YTT",
+    # flake8-bugbear
+    "B",
+    # flake8-quotes
+    "Q",
+    # pylint
+    "PLE",
+    "PLR",
+    "PLW",
+    # misc lints
+    "PIE",
+    # tidy imports
+    "TID",
+    # implicit string concatenation
+    "ISC",
 ]
 
 extend-ignore = [
-
-  # allow module import not at top of file, important for notebooks
-  "E402",
-  # do not assign a lambda expression, use a def
-  "E731",
-  # Too many arguments to function call
-  "PLR0913",
-  # Too many returns
-  "PLR0911",
-  # Too many branches
-  "PLR0912",
-  # Too many statements
-  "PLR0915",
-  # Magic number
-  "PLR2004",
-  # Consider `elif` instead of `else` then `if` to remove indentation level
-  "PLR5501",
-  # For calls to warnings.warn(): No explicit `stacklevel` keyword argument found
-  "B028",
+    # allow module import not at top of file, important for notebooks
+    "E402",
+    # do not assign a lambda expression, use a def
+    "E731",
+    # Too many arguments to function call
+    "PLR0913",
+    # Too many returns
+    "PLR0911",
+    # Too many branches
+    "PLR0912",
+    # Too many statements
+    "PLR0915",
+    # Magic number
+    "PLR2004",
+    # Consider `elif` instead of `else` then `if` to remove indentation level
+    "PLR5501",
+    # For calls to warnings.warn(): No explicit `stacklevel` keyword argument found
+    "B028",
+    # Incompatible with formatting
+    "ISC001",
 ]
 
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint.per-file-ignores]
 "docs/source/conf.py" = ["E501", "ERA001", "DTZ005"]
 "docs/source/*" = ["B018"]
 
-[tool.ruff.pydocstyle]
+[tool.ruff.lint.pydocstyle]
 convention = "google"
 
-[tool.nbqa.config]
-black = "pyproject.toml"
 
-[tool.nbqa.mutate]
-black = 1
-
+# ======================================================================================
+# Pytest configuration
+# ======================================================================================
 [tool.pytest.ini_options]
 filterwarnings = [
-    "ignore:delta_grad == 0.0",  # UserWarning in test_poisedness.py
-    "ignore:Jupyter is migrating",  # DeprecationWarning from jupyter client
+    "ignore:delta_grad == 0.0",
+    "ignore:Jupyter is migrating",
     "ignore:Noisy scalar functions are experimental",
+    "ignore:Parallelization together with",
 ]
 markers = [
     "wip: Tests that are work-in-progress.",
@@ -80,6 +166,15 @@ markers = [
 ]
 norecursedirs = ["docs", ".envs"]
 
+
+# ======================================================================================
+# Misc configuration
+# ======================================================================================
+[tool.nbqa.config]
+black = "pyproject.toml"
+
+[tool.nbqa.mutate]
+black = 1
 
 [tool.yamlfix]
 line_length = 88
