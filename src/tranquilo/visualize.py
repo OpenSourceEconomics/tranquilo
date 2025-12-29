@@ -456,7 +456,7 @@ def _get_sample_points(state, history):
             ]
         ),
     )
-    df["case"] = np.nan
+    df["case"] = pd.NA
     df.loc[state.new_indices, "case"] = "new"
     df.loc[state.old_indices_used, "case"] = "existing"
     df.loc[
