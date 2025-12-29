@@ -192,15 +192,18 @@ def test_external_tranquilo_ls_sphere_defaults():
 # Noisy case
 # ======================================================================================
 
-
-@pytest.mark.skipif(not IS_OPTIMAGIC_INSTALLED, reason="optimagic is not installed.")
-@pytest.mark.parametrize(
-    "algorithm, criterion",
-    [
+if IS_OPTIMAGIC_INSTALLED:
+    # Has to be defined here to avoid import errors when optimagic is not installed
+    ALGORITHM_AND_CRITERION = [
         ("tranquilo", mark.scalar(lambda x: x @ x)),
         ("tranquilo_ls", mark.least_squares(lambda x: x)),
-    ],
-)
+    ]
+else:
+    ALGORITHM_AND_CRITERION = []
+
+
+@pytest.mark.skipif(not IS_OPTIMAGIC_INSTALLED, reason="optimagic is not installed.")
+@pytest.mark.parametrize("algorithm, criterion", ALGORITHM_AND_CRITERION)
 def test_tranquilo_with_noise_handling_and_deterministic_function(algorithm, criterion):
     res = minimize(
         fun=criterion,
@@ -238,13 +241,7 @@ def test_tranquilo_ls_with_noise_handling_and_noisy_function():
 
 
 @pytest.mark.skipif(not IS_OPTIMAGIC_INSTALLED, reason="optimagic is not installed.")
-@pytest.mark.parametrize(
-    "algorithm, criterion",
-    [
-        ("tranquilo", mark.scalar(lambda x: x @ x)),
-        ("tranquilo_ls", mark.least_squares(lambda x: x)),
-    ],
-)
+@pytest.mark.parametrize("algorithm, criterion", ALGORITHM_AND_CRITERION)
 def test_tranquilo_with_binding_bounds(algorithm, criterion):
     res = minimize(
         fun=criterion,
