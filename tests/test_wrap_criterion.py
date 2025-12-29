@@ -2,9 +2,10 @@ import itertools
 
 import numpy as np
 import pytest
+from numpy.testing import assert_array_almost_equal as aaae
+
 from tranquilo.history import History
 from tranquilo.wrap_criterion import get_wrapped_criterion
-from numpy.testing import assert_array_almost_equal as aaae
 
 TEST_CASES = list(itertools.product(["scalar", "least_squares", "likelihood"], [1, 2]))
 

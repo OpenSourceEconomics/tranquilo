@@ -1,9 +1,10 @@
 import pytest
+
 from tranquilo.config import IS_OPTIMAGIC_INSTALLED
 
 if IS_OPTIMAGIC_INSTALLED:
-    from optimagic.optimization.optimize import minimize
     from optimagic.benchmarking.get_benchmark_problems import get_benchmark_problems
+    from optimagic.optimization.optimize import minimize
 
 
 @pytest.mark.skipif(not IS_OPTIMAGIC_INSTALLED, reason="optimagic is not installed.")

@@ -1,6 +1,7 @@
 import numpy as np
-from tranquilo.clustering import cluster
 from numpy.testing import assert_array_equal as aae
+
+from tranquilo.clustering import cluster
 
 
 def test_cluster_lollipop():

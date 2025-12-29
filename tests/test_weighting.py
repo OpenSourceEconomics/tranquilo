@@ -1,4 +1,5 @@
 import numpy as np
+
 from tranquilo.weighting import get_sample_weighter
 
 

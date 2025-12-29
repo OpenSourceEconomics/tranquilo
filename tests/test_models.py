@@ -1,6 +1,8 @@
 import numpy as np
 import pytest
-from tranquilo.region import Region
+from numpy.testing import assert_array_almost_equal as aaae
+from numpy.testing import assert_array_equal
+
 from tranquilo.models import (
     ScalarModel,
     VectorModel,
@@ -13,8 +15,7 @@ from tranquilo.models import (
     n_interactions,
     n_second_order_terms,
 )
-from numpy.testing import assert_array_almost_equal as aaae
-from numpy.testing import assert_array_equal
+from tranquilo.region import Region
 
 
 def test_predict_scalar():

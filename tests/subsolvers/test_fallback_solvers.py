@@ -1,8 +1,8 @@
-import pytest
 import numpy as np
+import pytest
 from numpy.testing import assert_array_almost_equal as aaae
-from tranquilo.models import ScalarModel
 
+from tranquilo.models import ScalarModel
 from tranquilo.subsolvers.fallback_subsolvers import (
     robust_cube_solver,
     robust_cube_solver_multistart,

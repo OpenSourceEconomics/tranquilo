@@ -2,9 +2,9 @@ import numpy as np
 import pytest
 from numpy.testing import assert_array_almost_equal, assert_array_equal
 
+from tranquilo.config import IS_OPTIMAGIC_INSTALLED
 from tranquilo.fit_models import _quadratic_features, get_fitter
 from tranquilo.region import Region
-from tranquilo.config import IS_OPTIMAGIC_INSTALLED
 
 if IS_OPTIMAGIC_INSTALLED:
     from optimagic.differentiation.derivatives import (

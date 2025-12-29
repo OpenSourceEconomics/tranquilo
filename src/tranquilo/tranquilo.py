@@ -3,6 +3,7 @@ from typing import NamedTuple
 
 import numpy as np
 
+from tranquilo.adjust_n_evals import adjust_n_evals
 from tranquilo.adjust_radius import adjust_radius
 from tranquilo.filter_points import (
     drop_worst_points,
@@ -11,10 +12,9 @@ from tranquilo.models import (
     ScalarModel,
     VectorModel,
 )
-from tranquilo.process_arguments import process_arguments, next_multiple
+from tranquilo.process_arguments import next_multiple, process_arguments
 from tranquilo.region import Region
 from tranquilo.rho_noise import simulate_rho_noise
-from tranquilo.adjust_n_evals import adjust_n_evals
 
 
 # wrapping gives us the signature and docstring of process arguments

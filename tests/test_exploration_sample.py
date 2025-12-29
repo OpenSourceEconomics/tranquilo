@@ -2,9 +2,9 @@ from itertools import product
 
 import numpy as np
 import pytest
-from tranquilo.exploration_sample import draw_exploration_sample
 from numpy.testing import assert_array_almost_equal as aaae
 
+from tranquilo.exploration_sample import draw_exploration_sample
 
 dim = 2
 distributions = ["uniform", "triangular"]

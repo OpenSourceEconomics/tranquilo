@@ -1,5 +1,8 @@
 """Auxiliary functions for the quadratic BNTR trust-region subsolver."""
+
 import numpy as np
+from numba import njit
+
 from tranquilo.subsolvers._conjugate_gradient_fast import (
     minimize_trust_cg_fast,
 )
@@ -9,7 +12,6 @@ from tranquilo.subsolvers._steihaug_toint_fast import (
 from tranquilo.subsolvers._trsbox_fast import (
     minimize_trust_trsbox_fast,
 )
-from numba import njit
 
 EPSILON = np.finfo(float).eps ** (2 / 3)
 
@@ -790,8 +792,7 @@ def _perform_gradient_descent_step(
         square_terms = x_inactive.T @ hessian_inactive @ x_inactive
 
         predicted_reduction = trustregion_radius * (
-            gradient_norm
-            - 0.5 * trustregion_radius * square_terms / (gradient_norm**2)
+            gradient_norm - 0.5 * trustregion_radius * square_terms / (gradient_norm**2)
         )
         actual_reduction = f_candidate_initial - f_candidate
 
@@ -1111,7 +1112,9 @@ def _update_trustregion_radius_and_gradient_descent(
 def _get_fischer_burmeister_direction_vector(x, gradient, lower_bounds, upper_bounds):
     """Compute the constrained direction vector via the Fischer-Burmeister function."""
     direction = np.zeros(len(x))
-    for i, (x_, g_, l_, u_) in enumerate(zip(x, gradient, lower_bounds, upper_bounds)):
+    for i, (x_, g_, l_, u_) in enumerate(
+        zip(x, gradient, lower_bounds, upper_bounds, strict=False)
+    ):
         fischer_scalar = _get_fischer_burmeister_scalar(u_ - x_, -g_)
         fischer_scalar = _get_fischer_burmeister_scalar(fischer_scalar, x_ - l_)
 

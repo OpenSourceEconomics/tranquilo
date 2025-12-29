@@ -1,8 +1,9 @@
-from typing import NamedTuple
 from enum import Enum
-from tranquilo.models import n_free_params
+from typing import NamedTuple
 
 import numpy as np
+
+from tranquilo.models import n_free_params
 
 
 def get_default_stagnation_options(noisy, batch_size):

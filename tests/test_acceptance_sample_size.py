@@ -1,9 +1,10 @@
 import pytest
+from scipy.stats import norm
+
 from tranquilo.acceptance_sample_size import (
     _compute_factor,
     _get_optimal_sample_sizes,
 )
-from scipy.stats import norm
 
 TEST_CASES = [
     (0.5, 0.5, 0.5, 0),

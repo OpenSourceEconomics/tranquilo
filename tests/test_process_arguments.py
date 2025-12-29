@@ -4,18 +4,20 @@ When testing process_arguments we should only test the values of outputs that so
 depend on the inputs, not the values with static defaults.
 
 """
-import pytest
+
 import numpy as np
+import pytest
+
 from tranquilo.process_arguments import (
-    process_arguments,
-    _process_batch_size,
-    _process_sample_size,
-    _process_model_type,
-    _process_search_radius_factor,
     _process_acceptance_decider,
+    _process_batch_size,
     _process_model_fitter,
+    _process_model_type,
     _process_residualize,
+    _process_sample_size,
+    _process_search_radius_factor,
     next_multiple,
+    process_arguments,
 )
 
 

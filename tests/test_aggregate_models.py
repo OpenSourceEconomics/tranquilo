@@ -1,5 +1,7 @@
 import numpy as np
 import pytest
+from numpy.testing import assert_array_equal
+
 from tranquilo.aggregate_models import (
     aggregator_identity,
     aggregator_information_equality_linear,
@@ -7,7 +9,6 @@ from tranquilo.aggregate_models import (
     aggregator_sum,
 )
 from tranquilo.models import ScalarModel, VectorModel
-from numpy.testing import assert_array_equal
 
 
 @pytest.mark.parametrize("square_terms", [np.arange(9).reshape(1, 3, 3), None])

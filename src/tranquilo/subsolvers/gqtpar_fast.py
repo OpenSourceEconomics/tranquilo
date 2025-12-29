@@ -1,4 +1,5 @@
 """Auxiliary functions for the quadratic GQTPAR trust-region subsolver."""
+
 import numpy as np
 from numba import njit
 from scipy.linalg import cho_solve, solve_triangular
@@ -177,7 +178,6 @@ def _get_initial_guess_for_lambdas(model_gradient, model_hessian):
 
     """
     gradient_norm = _norm(model_gradient, -1.0)
-    model_hessian = model_hessian
 
     hessian_infinity_norm = _norm(model_hessian, np.inf)
     hessian_frobenius_norm = _norm(model_hessian, -1.0)
@@ -540,7 +540,6 @@ def _compute_terms_to_make_leading_submatrix_singular(
             hessian after ``delta`` is added to its element (k, k).
 
     """
-    hessian_plus_lambda = hessian_plus_lambda
     upper_triangular = hessian_upper_triangular
 
     delta = (

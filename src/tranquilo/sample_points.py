@@ -1,13 +1,13 @@
+import functools
 from functools import partial
 
 import numpy as np
+from scipy.optimize import Bounds, minimize
 from scipy.spatial.distance import pdist
 from scipy.special import gammainc, logsumexp
 
-from scipy.optimize import minimize, Bounds
 from tranquilo.get_component import get_component
 from tranquilo.options import SamplerOptions
-import functools
 
 
 def get_sampler(sampler, user_options=None):

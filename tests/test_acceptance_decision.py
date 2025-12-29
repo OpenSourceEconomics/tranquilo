@@ -2,23 +2,24 @@ from collections import namedtuple
 
 import numpy as np
 import pytest
-from tranquilo.sample_points import get_sampler
+from numpy.testing import assert_array_equal
+
 from tranquilo.acceptance_decision import (
     _accept_simple,
-    _get_acceptance_result,
-    calculate_rho,
     _generate_alpha_grid,
+    _generate_speculative_sample,
+    _get_acceptance_result,
     _is_on_border,
     _is_on_cube_border,
     _is_on_sphere_border,
     _sample_on_line,
-    _generate_speculative_sample,
+    calculate_rho,
 )
+from tranquilo.bounds import Bounds
 from tranquilo.history import History
 from tranquilo.region import Region
-from tranquilo.bounds import Bounds
+from tranquilo.sample_points import get_sampler
 from tranquilo.solve_subproblem import SubproblemResult
-from numpy.testing import assert_array_equal
 
 # ======================================================================================
 # Fixtures
@@ -157,6 +158,7 @@ def test_calculate_rho(actual_improvement, expected_improvement, expected):
 CASES = zip(
     [1, 2, 4, 6],
     [np.array([]), np.array([2]), np.array([2, 4, 8]), np.array([2, 4, 8])],
+    strict=False,
 )
 
 

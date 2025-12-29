@@ -1,3 +1,5 @@
+import warnings
+
 import numpy as np
 
 from tranquilo.acceptance_decision import get_acceptance_decider
@@ -9,28 +11,27 @@ from tranquilo.fit_models import get_fitter
 from tranquilo.history import History
 from tranquilo.options import (
     ConvOptions,
+    NoiseAdaptationOptions,
     StopOptions,
     get_default_acceptance_decider,
     get_default_aggregator,
     get_default_batch_size,
     get_default_model_fitter,
-    get_default_residualize,
     get_default_model_type,
     get_default_n_evals_at_start,
     get_default_n_evals_per_point,
     get_default_radius_options,
+    get_default_residualize,
+    get_default_sample_filter,
     get_default_sample_size,
     get_default_search_radius_factor,
     get_default_stagnation_options,
-    get_default_sample_filter,
     update_option_bundle,
-    NoiseAdaptationOptions,
 )
 from tranquilo.region import Region
 from tranquilo.sample_points import get_sampler
 from tranquilo.solve_subproblem import get_subsolver
 from tranquilo.wrap_criterion import get_wrapped_criterion
-import warnings
 
 
 def process_arguments(

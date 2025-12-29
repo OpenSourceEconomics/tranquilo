@@ -1,7 +1,11 @@
 import numpy as np
 import pandas as pd
 import pytest
+from numpy.testing import assert_array_almost_equal as aaae
+from numpy.testing import assert_array_equal as aae
+
 from tranquilo.config import TEST_FIXTURES_DIR
+from tranquilo.models import ScalarModel
 from tranquilo.subsolvers.bntr import (
     ActiveBounds,
     _update_trustregion_radius_and_gradient_descent,
@@ -85,9 +89,6 @@ from tranquilo.subsolvers.bntr_fast import (
 from tranquilo.subsolvers.bntr_fast import (
     _update_trustregion_radius_conjugate_gradient as update_radius_cg_fast,
 )
-from tranquilo.models import ScalarModel
-from numpy.testing import assert_array_almost_equal as aaae
-from numpy.testing import assert_array_equal as aae
 
 
 def test_eval_criterion():
@@ -252,7 +253,6 @@ def test_apply_bounds_to_conjugate_gradient_step():
         step_inactive, x_candidate, lower_bounds, upper_bounds, bounds_info
     )
     aae(res_orig, res_fast)
-    pass
 
 
 @pytest.mark.slow()

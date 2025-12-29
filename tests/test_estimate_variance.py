@@ -1,11 +1,12 @@
 import numpy as np
 import pytest
+from numpy.testing import assert_array_almost_equal as aaae
+
 from tranquilo.estimate_variance import (
     _estimate_variance_classic,
 )
 from tranquilo.history import History
 from tranquilo.tranquilo import Region
-from numpy.testing import assert_array_almost_equal as aaae
 
 
 @pytest.mark.parametrize("model_type", ["scalar", "vector"])

@@ -1,5 +1,5 @@
-from pathlib import Path
 import importlib.util
+from pathlib import Path
 
 DOCS_DIR = Path(__file__).parent.parent / "docs"
 

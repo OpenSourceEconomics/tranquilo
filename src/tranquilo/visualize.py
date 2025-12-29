@@ -1,15 +1,14 @@
 from copy import deepcopy
+from typing import Any, Protocol, runtime_checkable
 
 import numpy as np
 import pandas as pd
 from numba import njit
 
 from tranquilo.clustering import cluster
+from tranquilo.config import IS_PLOTLY_INSTALLED
 from tranquilo.geometry import log_d_quality_calculator
 from tranquilo.volume import get_radius_after_volume_scaling
-from tranquilo.config import IS_PLOTLY_INSTALLED
-
-from typing import Any, Protocol, runtime_checkable
 
 if IS_PLOTLY_INSTALLED:
     import plotly.express as px
@@ -540,7 +539,7 @@ def _process_results(result):
     elif result.algorithm in ["tranquilo", "tranquilo_ls"]:
         pass
     else:
-        NotImplementedError(
+        raise NotImplementedError(
             f"Diagnostic plots are not implemented for {result.algorithm}"
         )
     return result

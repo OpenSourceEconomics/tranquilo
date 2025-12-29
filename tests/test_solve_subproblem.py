@@ -1,10 +1,11 @@
 import numpy as np
 import pytest
-from tranquilo.models import ScalarModel
-from tranquilo.solve_subproblem import get_subsolver
-from tranquilo.region import Region
-from tranquilo.bounds import Bounds
 from numpy.testing import assert_array_almost_equal as aaae
+
+from tranquilo.bounds import Bounds
+from tranquilo.models import ScalarModel
+from tranquilo.region import Region
+from tranquilo.solve_subproblem import get_subsolver
 
 solvers = ["gqtpar", "gqtpar_fast"]
 

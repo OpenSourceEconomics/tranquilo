@@ -1,5 +1,8 @@
 import numpy as np
 import pytest
+from numpy.testing import assert_array_almost_equal as aaae
+from scipy.spatial.distance import pdist
+
 from tranquilo.bounds import Bounds
 from tranquilo.region import Region
 from tranquilo.sample_points import (
@@ -8,8 +11,6 @@ from tranquilo.sample_points import (
     _project_onto_unit_hull,
     get_sampler,
 )
-from numpy.testing import assert_array_almost_equal as aaae
-from scipy.spatial.distance import pdist
 
 SAMPLERS = ["random_interior", "random_hull", "optimal_hull"]
 

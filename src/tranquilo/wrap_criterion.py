@@ -1,4 +1,5 @@
 import numpy as np
+
 from tranquilo.history import History
 
 

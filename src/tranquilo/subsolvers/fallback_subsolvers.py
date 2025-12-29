@@ -1,6 +1,7 @@
-import numpy as np
 from functools import partial
-from scipy.optimize import Bounds, minimize, NonlinearConstraint
+
+import numpy as np
+from scipy.optimize import Bounds, NonlinearConstraint, minimize
 
 from tranquilo.exploration_sample import draw_exploration_sample
 

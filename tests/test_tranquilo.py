@@ -1,16 +1,16 @@
 import itertools
-
-import pytest
 from functools import partial
+
 import numpy as np
+import pytest
 from numpy.testing import assert_array_almost_equal as aaae
 
-from tranquilo.tranquilo import _tranquilo
 from tranquilo.config import IS_OPTIMAGIC_INSTALLED
+from tranquilo.tranquilo import _tranquilo
 
 if IS_OPTIMAGIC_INSTALLED:
-    from optimagic.optimization.optimize import minimize
     from optimagic import mark
+    from optimagic.optimization.optimize import minimize
 
 
 tranquilo = partial(

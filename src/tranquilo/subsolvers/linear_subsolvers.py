@@ -1,4 +1,5 @@
 """Collection of linear trust-region subsolvers."""
+
 from typing import NamedTuple, Union
 
 import numpy as np
@@ -97,7 +98,7 @@ def improve_geomtery_trsbox_linear(
     upper_bounds,
     trustregion_radius,
     *,
-    zero_treshold=1e-14
+    zero_treshold=1e-14,
 ):
     """Maximize a Lagrange polynomial of degree one to improve geometry of the model.
 
@@ -326,9 +327,7 @@ def _get_distance_to_trustregion_boundary(
     else:
         distance_to_boundary = (
             np.sqrt(
-                np.maximum(
-                    0, g_dot_x**2 + g_sumsq * (trustregion_radius**2 - x_sumsq)
-                )
+                np.maximum(0, g_dot_x**2 + g_sumsq * (trustregion_radius**2 - x_sumsq))
             )
             - g_dot_x
         ) / g_sumsq
