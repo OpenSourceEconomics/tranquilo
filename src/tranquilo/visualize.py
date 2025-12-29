@@ -2,17 +2,20 @@ from copy import deepcopy
 
 import numpy as np
 import pandas as pd
-import plotly.express as px
 from numba import njit
-from plotly import figure_factory as ff
-from plotly import graph_objects as go
-from plotly.subplots import make_subplots
 
 from tranquilo.clustering import cluster
 from tranquilo.geometry import log_d_quality_calculator
 from tranquilo.volume import get_radius_after_volume_scaling
+from tranquilo.config import IS_PLOTLY_INSTALLED
 
 from typing import Any, Protocol, runtime_checkable
+
+if IS_PLOTLY_INSTALLED:
+    import plotly.express as px
+    from plotly import figure_factory as ff
+    from plotly import graph_objects as go
+    from plotly.subplots import make_subplots
 
 
 def visualize_tranquilo(results, iterations):
@@ -53,6 +56,11 @@ def visualize_tranquilo(results, iterations):
                 iteration.
 
     """
+    if not IS_PLOTLY_INSTALLED:
+        raise ImportError(
+            "Plotly is not installed. Please install plotly to use visualize_tranquilo."
+        )
+
     results = deepcopy(results)
     if isinstance(iterations, int):
         iterations = {case: iterations for case in results}

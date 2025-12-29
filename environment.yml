@@ -14,7 +14,7 @@ dependencies:
   - pytest-xdist  # dev, tests
   - setuptools_scm  # dev
   - toml  # dev
-  - optimagic  # run, tests
+  - optimagic>=0.5.0  # run, tests
   - numba  # run, tests
   - numpy>=1.17.0  # run, tests
   - pandas  # run, tests

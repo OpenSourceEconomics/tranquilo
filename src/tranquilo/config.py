@@ -1,17 +1,12 @@
 from pathlib import Path
 import importlib.util
 
-import plotly.express as px
-
 DOCS_DIR = Path(__file__).parent.parent / "docs"
 
 EXAMPLE_DIR = Path(__file__).parent / "examples"
 
 TEST_FIXTURES_DIR = Path(__file__).parent.parent.parent / "tests" / "fixtures"
 
-
-PLOTLY_TEMPLATE = "simple_white"
-PLOTLY_PALETTE = px.colors.qualitative.Set2
 
 DEFAULT_N_CORES = 1
 
@@ -30,6 +25,7 @@ def _is_installed(module_name: str) -> bool:
 
 
 IS_OPTIMAGIC_INSTALLED = _is_installed("optimagic")
+IS_PLOTLY_INSTALLED = _is_installed("plotly")
 
 
 # =================================================================================
