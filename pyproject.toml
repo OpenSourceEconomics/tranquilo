@@ -155,8 +155,8 @@ convention = "google"
 # ======================================================================================
 [tool.pytest.ini_options]
 filterwarnings = [
-    "ignore:delta_grad == 0.0",
-    "ignore:Jupyter is migrating",
+    "ignore:delta_grad == 0.0",  # UserWarning in test_poisedness.py
+    "ignore:Jupyter is migrating",  # DeprecationWarning from jupyter client
     "ignore:Noisy scalar functions are experimental",
     "ignore:Parallelization together with",
 ]
@@ -170,12 +170,6 @@ norecursedirs = ["docs", ".envs"]
 # ======================================================================================
 # Misc configuration
 # ======================================================================================
-[tool.nbqa.config]
-black = "pyproject.toml"
-
-[tool.nbqa.mutate]
-black = 1
-
 [tool.yamlfix]
 line_length = 88
 sequence_style = "block_style"

@@ -81,7 +81,7 @@ def test_radius_after_volume_rescaling_scaling_factor_cube(dim):
     assert np.allclose(got, naive)
 
 
-@pytest.mark.parametrize("dim, coeff", list(zip(dims, coeffs, strict=False)))
+@pytest.mark.parametrize("dim, coeff", list(zip(dims, coeffs, strict=True)))
 def test_shpere_volume_and_radius(dim, coeff):
     radius = 0.5
     expected_volume = coeff * radius**dim

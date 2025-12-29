@@ -213,7 +213,7 @@ def _add_redundant_argument_handling(func, signature, warn):
 
     @functools.wraps(func)
     def _wrapper_add_redundant_argument_handling(*args, **kwargs):
-        _kwargs = {**dict(zip(signature[: len(args)], args, strict=False)), **kwargs}
+        _kwargs = {**dict(zip(signature[: len(args)], args, strict=True)), **kwargs}
 
         _redundant = {k: v for k, v in _kwargs.items() if k not in signature}
         _valid = {k: v for k, v in _kwargs.items() if k in signature}

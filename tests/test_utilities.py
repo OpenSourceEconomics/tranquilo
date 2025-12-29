@@ -8,7 +8,7 @@ def test_propose_alternatives():
     possibilities = ["scipy_lbfgsb", "scipy_slsqp", "nlopt_lbfgsb"]
     inputs = [["scipy_L-BFGS-B", 1], ["L-BFGS-B", 2]]
     expected = [["scipy_slsqp"], ["scipy_slsqp", "scipy_lbfgsb"]]
-    for inp, exp in zip(inputs, expected, strict=False):
+    for inp, exp in zip(inputs, expected, strict=True):
         assert propose_alternatives(inp[0], possibilities, number=inp[1]) == exp
 
 

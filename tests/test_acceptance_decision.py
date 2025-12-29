@@ -158,7 +158,7 @@ def test_calculate_rho(actual_improvement, expected_improvement, expected):
 CASES = zip(
     [1, 2, 4, 6],
     [np.array([]), np.array([2]), np.array([2, 4, 8]), np.array([2, 4, 8])],
-    strict=False,
+    strict=True,
 )
 
 

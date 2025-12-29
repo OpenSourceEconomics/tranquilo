@@ -47,14 +47,14 @@ def _estimate_variance_classic(
     if model_type == "scalar":
         samples = list(history.get_fvals(valid_indices).values())
         out = 0.0
-        for weight, sample in zip(weights, samples, strict=False):
+        for weight, sample in zip(weights, samples, strict=True):
             out += weight * np.var(sample, ddof=1)
     else:
         samples = list(history.get_fvecs(valid_indices).values())
 
         dim = samples[0].shape[1]
         out = np.zeros((dim, dim))
-        for weight, sample in zip(weights, samples, strict=False):
+        for weight, sample in zip(weights, samples, strict=True):
             out += weight * np.cov(sample, rowvar=False, ddof=1)
 
     return out
