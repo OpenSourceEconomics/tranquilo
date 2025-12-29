@@ -10,7 +10,6 @@ dependencies:
   - pytest-cov  # tests
   - pytest-xdist  # dev, tests
   - numba  # run, tests
-  - optimagic>=0.5.0  # tests
   - numpy>=1.17.0  # run, tests
   - pandas  # run, tests
   - plotly  # run, tests
