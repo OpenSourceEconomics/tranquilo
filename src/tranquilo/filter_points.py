@@ -3,8 +3,8 @@ import scipy
 
 from tranquilo.clustering import cluster
 from tranquilo.get_component import get_component
-from tranquilo.volume import get_radius_after_volume_scaling
 from tranquilo.options import FilterOptions
+from tranquilo.volume import get_radius_after_volume_scaling
 
 
 def get_sample_filter(sample_filter="keep_all", user_options=None):

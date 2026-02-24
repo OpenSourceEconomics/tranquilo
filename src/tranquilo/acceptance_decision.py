@@ -4,6 +4,7 @@ Decision functions can simply decide whether or not the candidate is accepted bu
 also do own function evaluations and decide to accept a different point.
 
 """
+
 from typing import NamedTuple
 
 import numpy as np

@@ -104,7 +104,7 @@ class History:
 
         f_indices = np.arange(self.n_fun, self.n_fun + n_new_points)
 
-        for x_index, f_index in zip(x_indices, f_indices):
+        for x_index, f_index in zip(x_indices, f_indices, strict=True):
             self.index_mapper[x_index].append(f_index)
 
         self.n_fun += n_new_points

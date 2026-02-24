@@ -1,5 +1,7 @@
-import pytest
 from collections import namedtuple
+
+import pytest
+
 from tranquilo.options import (
     get_default_aggregator,
     update_option_bundle,

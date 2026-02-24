@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.stats import qmc, triang
+
 from tranquilo.utilities import get_rng
 
 
@@ -46,7 +47,7 @@ def draw_exploration_sample(
     if sampling_distribution not in valid_distributions:
         raise ValueError(f"Unsupported distribution: {sampling_distribution}")
 
-    for name, bound in zip(["lower", "upper"], [lower, upper]):
+    for name, bound in zip(["lower", "upper"], [lower, upper], strict=True):
         if not np.isfinite(bound).all():
             raise ValueError(
                 f"multistart optimization requires finite {name}_bounds or "

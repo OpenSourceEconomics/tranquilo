@@ -1,4 +1,7 @@
 import numpy as np
+from numpy.testing import assert_array_almost_equal as aaae
+
+from tranquilo.models import ScalarModel
 from tranquilo.subsolvers.gqtpar import (
     DampingFactors,
     HessianInfo,
@@ -21,8 +24,6 @@ from tranquilo.subsolvers.gqtpar_fast import (
 from tranquilo.subsolvers.gqtpar_fast import (
     _get_initial_guess_for_lambdas as init_lambdas_fast,
 )
-from tranquilo.models import ScalarModel
-from numpy.testing import assert_array_almost_equal as aaae
 
 
 def test_get_initial_guess_for_lambda():

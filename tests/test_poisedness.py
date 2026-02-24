@@ -1,6 +1,9 @@
+import sys
+
 import numpy as np
 import pytest
-import sys
+from numpy.testing import assert_array_almost_equal as aaae
+
 from tranquilo.poisedness import (
     _get_minimize_options,
     _lagrange_poly_matrix,
@@ -8,7 +11,6 @@ from tranquilo.poisedness import (
     get_poisedness_constant,
     improve_poisedness,
 )
-from numpy.testing import assert_array_almost_equal as aaae
 
 
 def evaluate_scalar_model(x, intercept, linear_terms, square_terms):

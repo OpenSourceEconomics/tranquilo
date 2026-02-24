@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+
 from tranquilo.adjust_radius import adjust_radius
 from tranquilo.options import RadiusOptions
 

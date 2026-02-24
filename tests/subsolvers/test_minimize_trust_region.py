@@ -1,5 +1,8 @@
 import numpy as np
 import pytest
+from numpy.testing import assert_array_almost_equal as aaae
+from numpy.testing import assert_array_equal as aae
+
 from tranquilo.subsolvers._conjugate_gradient import (
     _get_distance_to_trustregion_boundary as gdtb,
 )
@@ -91,8 +94,6 @@ from tranquilo.subsolvers._trsbox_fast import (
 from tranquilo.subsolvers._trsbox_fast import (
     minimize_trust_trsbox_fast,
 )
-from numpy.testing import assert_array_almost_equal as aaae
-from numpy.testing import assert_array_equal as aae
 
 
 def test_minimize_trust_cg():

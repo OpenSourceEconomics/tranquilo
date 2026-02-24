@@ -6,13 +6,13 @@ from scipy.linalg import qr_multiply
 
 from tranquilo.get_component import get_component
 from tranquilo.handle_infinity import get_infinity_handler
-from tranquilo.options import FitterOptions
 from tranquilo.models import (
     VectorModel,
     add_models,
     move_model,
     n_second_order_terms,
 )
+from tranquilo.options import FitterOptions
 
 
 def get_fitter(

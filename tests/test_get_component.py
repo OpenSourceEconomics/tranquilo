@@ -1,5 +1,7 @@
-import pytest
 from collections import namedtuple
+
+import pytest
+
 from tranquilo.get_component import (
     _add_redundant_argument_handling,
     _fail_if_mandatory_argument_is_missing,

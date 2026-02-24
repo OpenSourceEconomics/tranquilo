@@ -1,5 +1,6 @@
-import numpy as np
 from functools import partial
+
+import numpy as np
 from scipy.optimize import Bounds, NonlinearConstraint, minimize
 
 from tranquilo.exploration_sample import draw_exploration_sample
@@ -80,8 +81,9 @@ def robust_cube_solver_multistart(model, x_candidate):
 def robust_sphere_solver_inscribed_cube(model, x_candidate):
     """Robust sphere solver that uses a cube solver in an inscribed cube.
 
-    We let x be in the largest cube that is inscribed inside the unit sphere. Formula
-    is taken from http://tinyurl.com/4astpuwn.
+    We let x be in the largest cube that is inscribed inside the unit sphere. Formula is
+    taken from
+    http://tinyurl.com/4astpuwn.
 
     This solver cannot find solutions on the hull of the sphere.
 
@@ -184,6 +186,8 @@ def _get_crit_and_grad(model):
 
 
 def _get_constraint():
+    """Raises scipy warning."""
+
     def _constr_fun(x):
         return x @ x
 

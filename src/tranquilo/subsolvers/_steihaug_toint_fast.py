@@ -1,4 +1,5 @@
 """Implementation of the Steihaug-Toint Conjugate Gradient algorithm."""
+
 import numpy as np
 from numba import njit
 
@@ -196,7 +197,13 @@ def _take_step_to_trustregion_boundary(x_candidate, p, dp, radius_sq, norm_d, no
 
 @njit
 def _check_convergence(
-    rnorm, rnorm0, abstol, ttol, divtol, converged, diverged  # noqa: ARG001
+    rnorm,
+    rnorm0,
+    abstol,
+    ttol,
+    divtol,
+    converged,
+    diverged,  # noqa: ARG001
 ):
     """Check for convergence."""
     if rnorm <= ttol:

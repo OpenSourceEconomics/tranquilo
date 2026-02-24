@@ -9,9 +9,9 @@ from numba import njit
 class VectorModel:
     intercepts: np.ndarray  # shape (n_residuals,)
     linear_terms: np.ndarray  # shape (n_residuals, n_params)
-    square_terms: Union[
-        np.ndarray, None
-    ] = None  # shape (n_residuals, n_params, n_params)
+    square_terms: Union[np.ndarray, None] = (
+        None  # shape (n_residuals, n_params, n_params)
+    )
 
     # scale and shift correspond to effective_radius and effective_center of the region
     # on which the model was fitted
@@ -98,7 +98,7 @@ def add_models(model1, model2):
         Union[ScalarModel, VectorModel]: The sum of the two models.
 
     """
-    if type(model1) != type(model2):
+    if not isinstance(model1, type(model2)):
         raise TypeError("Models must be of the same type.")
 
     if not np.allclose(model1.shift, model2.shift):

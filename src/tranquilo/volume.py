@@ -6,6 +6,7 @@ in an infinity norm rather than a euclidean norm.
 This is why we caracterize hypercubes by their radius (half the side length).
 
 """
+
 import numpy as np
 from scipy.special import gamma, loggamma
 

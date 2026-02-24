@@ -1,6 +1,7 @@
-import numpy as np
 import difflib
 import warnings
+
+import numpy as np
 
 
 def propose_alternatives(requested, possibilities, number=3):

@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+
 from tranquilo.bounds import Bounds, _any_finite
 
 CASES = [

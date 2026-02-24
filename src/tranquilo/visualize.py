@@ -1,17 +1,20 @@
 from copy import deepcopy
+from typing import Any, Protocol, runtime_checkable
 
 import numpy as np
 import pandas as pd
-import plotly.express as px
 from numba import njit
-from plotly import figure_factory as ff
-from plotly import graph_objects as go
-from plotly.subplots import make_subplots
 
-from optimagic.optimization.optimize_result import OptimizeResult
 from tranquilo.clustering import cluster
+from tranquilo.config import IS_PLOTLY_INSTALLED
 from tranquilo.geometry import log_d_quality_calculator
 from tranquilo.volume import get_radius_after_volume_scaling
+
+if IS_PLOTLY_INSTALLED:
+    import plotly.express as px
+    from plotly import figure_factory as ff
+    from plotly import graph_objects as go
+    from plotly.subplots import make_subplots
 
 
 def visualize_tranquilo(results, iterations):
@@ -52,11 +55,16 @@ def visualize_tranquilo(results, iterations):
                 iteration.
 
     """
+    if not IS_PLOTLY_INSTALLED:
+        raise ImportError(
+            "Plotly is not installed. Please install plotly to use visualize_tranquilo."
+        )
+
     results = deepcopy(results)
     if isinstance(iterations, int):
         iterations = {case: iterations for case in results}
         results = {case: _process_results(results[case]) for case in results}
-    elif isinstance(results, OptimizeResult):
+    elif isinstance(results, OptimizeResultLike):
         results = _process_results(results)
         results = {f"iteration {i}": results for i in iterations}
         iterations = {f"iteration {iteration}": iteration for iteration in iterations}
@@ -83,8 +91,8 @@ def visualize_tranquilo(results, iterations):
         result = results[case]
         iteration = iterations[case]
         state = result.algorithm_output["states"][iteration]
-        params_history = np.array(result.history["params"])
-        criterion_history = np.array(result.history["criterion"])
+        params_history = np.array(result.history.params)
+        criterion_history = np.array(result.history.fun)
         fig = _plot_sample_points(
             params_history, state, color_dict, fig, row=1, col=i + 1
         )
@@ -124,7 +132,7 @@ def _plot_criterion(history, state, color_dict, fig, row, col):
             x=np.arange(len(history)),
             showlegend=False,
             line_color="#C0C0C0",
-            name="Criterion",
+            name="criterion",
             mode="lines",
         ),
         row=row,
@@ -319,7 +327,7 @@ def _plot_fekete_criterion(res, fig, row, col, iteration):
 
 def _plot_clusters_points_ratio(res, iteration, fig, row, col):
     dim = res.params.shape[0]
-    history = np.array(res.history["params"])
+    history = np.array(res.history.params)
     states = res.algorithm_output["states"]
     colors = [
         "rgb(251,106,74)",
@@ -422,7 +430,7 @@ def _plot_distances_from_center(history, state, fig, col, rows):
 
 def _get_fekete_criterion(res):
     states = res.algorithm_output["states"][1:]
-    history = np.array(res.history["params"])
+    history = np.array(res.history.params)
 
     out = [np.nan] + [
         log_d_quality_calculator(
@@ -448,7 +456,7 @@ def _get_sample_points(state, history):
             ]
         ),
     )
-    df["case"] = np.nan
+    df["case"] = pd.NA
     df.loc[state.new_indices, "case"] = "new"
     df.loc[state.old_indices_used, "case"] = "existing"
     df.loc[
@@ -516,7 +524,7 @@ def _clean_legend_duplicates(fig):
 def _process_results(result):
     """Add model indices to states of optimization result."""
     result = deepcopy(result)
-    xs = np.array(result.history["params"])
+    xs = np.array(result.history.params)
     if result.algorithm in ["nag_pybobyqa", "nag_dfols"]:
         for i in range(1, len(result.algorithm_output["states"])):
             state = result.algorithm_output["states"][i]
@@ -531,7 +539,7 @@ def _process_results(result):
     elif result.algorithm in ["tranquilo", "tranquilo_ls"]:
         pass
     else:
-        NotImplementedError(
+        raise NotImplementedError(
             f"Diagnostic plots are not implemented for {result.algorithm}"
         )
     return result
@@ -588,3 +596,13 @@ def _get_model_indices(xs, state):
     for point in state.model_points:
         model_indices = np.concatenate([model_indices, _find_index(xs, point)])
     return model_indices.astype(int)
+
+
+@runtime_checkable
+class OptimizeResultLike(Protocol):
+    """Runtime-checkable stand-in for optimagic's OptimizeResult object."""
+
+    algorithm: str
+    history: Any
+    params: Any
+    algorithm_output: dict

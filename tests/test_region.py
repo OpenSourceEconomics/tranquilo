@@ -1,20 +1,21 @@
 import numpy as np
+import pytest
+from numpy.testing import assert_array_equal
+
 from tranquilo.bounds import Bounds
 from tranquilo.region import (
     Region,
     _any_bounds_binding,
-    _get_shape,
     _get_cube_bounds,
     _get_cube_center,
-    _get_effective_radius,
     _get_effective_center,
+    _get_effective_radius,
+    _get_shape,
     _map_from_unit_cube,
     _map_from_unit_sphere,
     _map_to_unit_cube,
     _map_to_unit_sphere,
 )
-from numpy.testing import assert_array_equal
-import pytest
 
 
 def test_map_to_unit_sphere():

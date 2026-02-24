@@ -2,11 +2,21 @@ import itertools
 
 import numpy as np
 import pytest
-from tranquilo.history import History
-from tranquilo.wrap_criterion import get_wrapped_criterion
 from numpy.testing import assert_array_almost_equal as aaae
 
+from tranquilo.history import History
+from tranquilo.wrap_criterion import get_wrapped_criterion
+
 TEST_CASES = list(itertools.product(["scalar", "least_squares", "likelihood"], [1, 2]))
+
+
+def _make_batch_fun(criterion):
+    """Convert a simple criterion function to a batch_fun for testing."""
+
+    def batch_fun(x_list, n_cores, batch_size):
+        return [criterion(x) for x in x_list]
+
+    return batch_fun
 
 
 @pytest.mark.parametrize("functype, n_evals", TEST_CASES)
@@ -19,6 +29,7 @@ def test_wrapped_criterion(functype, n_evals):
     }
 
     criterion = func_dict[functype]
+    batch_fun = _make_batch_fun(criterion)
 
     # set up history
     history = History(functype=functype)
@@ -29,7 +40,7 @@ def test_wrapped_criterion(functype, n_evals):
     assert history.get_n_fun() == 2
 
     wrapped_criterion = get_wrapped_criterion(
-        criterion=criterion, batch_evaluator="joblib", n_cores=1, history=history
+        batch_fun=batch_fun, n_cores=1, batch_size=1, history=history
     )
 
     # set up params and expected results

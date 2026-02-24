@@ -1,10 +1,11 @@
 """Test the history class for least-squares optimizers."""
+
 import numpy as np
 import pytest
-from tranquilo.history import History
-from tranquilo.region import Region
 from numpy.testing import assert_array_almost_equal as aaae
 
+from tranquilo.history import History
+from tranquilo.region import Region
 
 XS = [
     np.arange(3),

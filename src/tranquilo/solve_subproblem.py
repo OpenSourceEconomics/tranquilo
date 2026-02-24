@@ -4,24 +4,24 @@ from typing import NamedTuple
 import numpy as np
 
 from tranquilo.get_component import get_component
+from tranquilo.options import SubsolverOptions
 from tranquilo.subsolvers.bntr import (
     bntr,
 )
 from tranquilo.subsolvers.bntr_fast import (
     bntr_fast,
 )
+from tranquilo.subsolvers.fallback_subsolvers import (
+    robust_cube_solver,
+    robust_cube_solver_multistart,
+    robust_sphere_solver_inscribed_cube,
+    robust_sphere_solver_norm_constraint,
+    robust_sphere_solver_reparametrized,
+)
 from tranquilo.subsolvers.gqtpar import (
     gqtpar,
 )
 from tranquilo.subsolvers.gqtpar_fast import gqtpar_fast
-from tranquilo.options import SubsolverOptions
-from tranquilo.subsolvers.fallback_subsolvers import (
-    robust_cube_solver,
-    robust_sphere_solver_inscribed_cube,
-    robust_sphere_solver_norm_constraint,
-    robust_sphere_solver_reparametrized,
-    robust_cube_solver_multistart,
-)
 
 
 def get_subsolver(sphere_solver, cube_solver, retry_with_fallback, user_options=None):

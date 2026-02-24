@@ -1,13 +1,14 @@
 import numpy as np
 import pytest
+from numpy.testing import assert_array_almost_equal as aaae
+
 from tranquilo.aggregate_models import get_aggregator
-from tranquilo.fit_models import get_fitter
-from tranquilo.region import Region
 from tranquilo.bounds import Bounds
+from tranquilo.fit_models import get_fitter
+from tranquilo.options import NoiseAdaptationOptions
+from tranquilo.region import Region
 from tranquilo.rho_noise import simulate_rho_noise
 from tranquilo.solve_subproblem import get_subsolver
-from numpy.testing import assert_array_almost_equal as aaae
-from tranquilo.options import NoiseAdaptationOptions
 
 
 @pytest.mark.parametrize("functype", ["scalar", "least_squares"])

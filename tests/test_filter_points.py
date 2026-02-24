@@ -1,10 +1,10 @@
-from tranquilo.filter_points import get_sample_filter
-from tranquilo.filter_points import drop_worst_points
-from tranquilo.tranquilo import State
-from tranquilo.region import Region
-from numpy.testing import assert_array_equal as aae
-import pytest
 import numpy as np
+import pytest
+from numpy.testing import assert_array_equal as aae
+
+from tranquilo.filter_points import drop_worst_points, get_sample_filter
+from tranquilo.region import Region
+from tranquilo.tranquilo import State
 
 
 @pytest.fixture()
